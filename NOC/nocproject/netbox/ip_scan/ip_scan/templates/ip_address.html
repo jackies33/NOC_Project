@@ -1,0 +1,50 @@
+
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block content %}
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}{% endblock %}</title>
+
+     <style>
+        .myfield{
+            border:1px solid #ccc;
+            border-radius:5px;
+            height:25px;
+            width:200px;
+            margin: 10px 10px 10px 0;
+            color: black;
+        }
+        .mybutton{
+            padding: 12px 40px;
+            border-radius: 8px;
+            box-shadow: 2px 2px 2px 1px rgb(131, 131, 219) ;
+            border: 1px solid gray;
+            font-size: 20px;
+            color: green;
+        }
+     </style>
+</head>
+<h2>Fill in all forms</h2>
+
+    <form method="post">
+        {% csrf_token %}
+         <div>
+          {% for field in form %}
+         <div class="form-group">
+            {{field.label_tag}}
+            <div>{{field}}</div>
+            {% if field.errors%}
+            {% for error in field.errors %}
+            <div class="alert alert-danger">
+                {{error}}
+            </div>
+            {% endfor %}
+            {% endif %}
+         </div>
+          {% endfor %}
+         </div>
+    </form>
+
+{% endblock %}
