@@ -19,7 +19,7 @@ from noc.core.etl.models.administrativedomain import AdministrativeDomain
 from noc.core.etl.models.authprofile import AuthProfile
 from noc.custom.etl.extractors.classifier_for_extractor import classifier
 from noc.custom.etl.extractors.psql_conn import psql_conn
-
+from noc.custom.etl.engine.my_pass import netbox_url,netbox_api_token
 
 class NBRemoteSystem(BaseRemoteSystem):
     """
@@ -105,8 +105,8 @@ class NBNetworkSegmentExtractor(BaseExtractor):
 
     def __init__(self, system):
         super(NBNetworkSegmentExtractor, self).__init__(system)
-        self.url = self.url = 'http://10.50.64.71'
-        self.token = self.token = '3f6382e7f9c312ecc8cc2eca9f70293b5ca7edaa'
+        self.url = self.url = netbox_url
+        self.token = self.token = netbox_api_token
         self.nb = pynetbox.api(url=self.url, token=self.token)
         self.nb.http_session.verify = False
 
@@ -152,8 +152,8 @@ class NBManagedObjectExtractor(BaseExtractor):
             self.seen_name = set()
             self.seen_ids = {}
             self.seen_ip = set()
-            self.url = self.url = 'http://10.50.64.71'
-            self.token = self.token='3f6382e7f9c312ecc8cc2eca9f70293b5ca7edaa'
+            self.url = self.url = netbox_url
+            self.token = self.token = netbox_api_token
             self.nb = pynetbox.api(url=self.url, token=self.token)
             self.nb.http_session.verify = False
 

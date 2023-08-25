@@ -6,24 +6,12 @@ import time
 import pynetbox
 from .tgbot import tg_bot
 import datetime
+from .my_pass import netbox_url,netbox_api_token
 
-"""
-#name='klin-ar01'
-#site=6
-#tenants=2
-#device_role = 2
-#manufacturer = "Huawei"
-#device_type = 3
-#primary_ip = '10.100.138.37/32'
-#tags=['primary_ip']
-#interface_name = "Loopback1"
-"""
 
 status = 'active'
 type_of_interface = 'virtual'
 aobjt = 'dcim.interface'
-
-
 
 def add_device(name , site , location, tenants , device_role , manufacturer ,platform, device_type ,
                primary_ip , interface_name ,conn_scheme, management):
@@ -31,8 +19,8 @@ def add_device(name , site , location, tenants , device_role , manufacturer ,pla
     print(site)
     #print (status , str(name),str(primary_ip),int(site[1]),int(device_role[0]),int(device_type),int(tenants[0]))
 
-    nb = pynetbox.api(url='https://10.50.64.71',
-                      token='3f6382e7f9c312ecc8cc2eca9f70293b5ca7edaa')
+    nb = pynetbox.api(url=netbox_url,
+                      token=netbox_api_token)
     nb.http_session.verify = False
 
     try:

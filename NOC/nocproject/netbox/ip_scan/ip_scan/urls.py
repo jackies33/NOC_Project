@@ -9,11 +9,6 @@ urlpatterns = [
     path('ip_address_scan/network.png' , ip_address, name='ip_address')
 ]
 
-"""
-urlpatterns = [
-    path('devices/ipscan', views.IpScan.as_view(), name='random_animal'),
-]
-"""
 
 
 

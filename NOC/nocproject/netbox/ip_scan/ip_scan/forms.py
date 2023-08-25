@@ -1,7 +1,7 @@
 
 
 from django import forms
-from NOC.nocproject.netbox.ip_scan.ip_scan.psql_conn import postgresql_connections
+from .psql_conn import postgresql_connections
 
 psql = postgresql_connections()
 

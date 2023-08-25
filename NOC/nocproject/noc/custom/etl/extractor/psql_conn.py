@@ -1,12 +1,13 @@
 
 import psycopg2
+from noc.custom.etl.engine.my_pass import netbox_pass,netbox_url
 
 class psql_conn():
         conn = psycopg2.connect(
-                            host="10.50.64.71",
+                            host=netbox_url ,
                             database="netbox",
                             user="netbox",
-                            password="P@ssw0rd",
+                            password=netbox_pass,
                             sslmode='disable',
                         )
 

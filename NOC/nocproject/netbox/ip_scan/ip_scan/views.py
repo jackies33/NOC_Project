@@ -1,10 +1,8 @@
 
 
-
 from django.shortcuts import render,redirect
 from .forms import IpAddressForm
 from .connect_to_device import connect_handler_to_device
-
 
 
 def ip_address(request):

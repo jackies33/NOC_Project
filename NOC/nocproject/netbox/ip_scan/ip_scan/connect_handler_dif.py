@@ -1,13 +1,15 @@
 
+
 import socket
-from NOC.nocproject.netbox.ip_scan.ip_scan.add_device import add_device
-from NOC.nocproject.netbox.ip_scan.ip_scan.classifier import classifier_device_type
-from NOC.nocproject.netbox.ip_scan.ip_scan.my_pass import mylogin , mypass
+from .add_device import add_device
+from .classifier import classifier_device_type
+from .my_pass import mylogin , mypass
 from netmiko import ConnectHandler , NetMikoAuthenticationException, NetMikoTimeoutException
 import re
 from jnpr.junos.exception import ConnectAuthError,ConnectClosedError,ConnectError,ConnectTimeoutError
 from jnpr.junos import Device
 from lxml import etree
+
 
 
 login = mylogin

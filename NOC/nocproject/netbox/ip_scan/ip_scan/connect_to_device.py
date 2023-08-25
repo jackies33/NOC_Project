@@ -1,8 +1,9 @@
 
 
-from NOC.nocproject.netbox.ip_scan.ip_scan.psql_conn import postgresql_connections
-from NOC.nocproject.netbox.ip_scan.ip_scan.forms import get_ch_tuples_location,get_par_tuples_location
-from NOC.nocproject.netbox.ip_scan.ip_scan.connect_handler_dif import conn_device #conn_Huawei,conn_Juniper_rpc,check_ssh
+from .psql_conn import postgresql_connections
+from .forms import IpAddressForm,get_ch_tuples_location,get_par_tuples_location
+from .connect_handler_dif import conn_device #conn_Huawei,conn_Juniper_rpc,check_ssh
+
 
 
 def connect_handler_to_device(ip_address,platfrom,device_type,location,location_add,device_role,tenants,management):
@@ -20,9 +21,7 @@ def connect_handler_to_device(ip_address,platfrom,device_type,location,location_
                 print("ssh is ok")
 
             psql = postgresql_connections()
-            #choices_manufacturer = psql.postgre_conn_manufacturer()
             choices_platfrom = psql.postgre_conn_platform()
-            #choices_site_name = psql.postgre_conn_site()
             choices_location = get_par_tuples_location()
             choices_location_add = get_ch_tuples_location()
             choices_device_role = psql.postgre_conn_device_role()
