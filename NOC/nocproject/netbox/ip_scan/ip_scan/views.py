@@ -2,7 +2,7 @@
 
 from django.shortcuts import render,redirect
 from .forms import IpAddressForm
-from .connect_to_device import connect_handler_to_device
+from .connect_to_device import CONNECT_HANDLER
 
 
 def ip_address(request):
@@ -19,17 +19,9 @@ def ip_address(request):
                  tenants = form.cleaned_data['tenants']
                  management = form.cleaned_data['management']
                  print('its views!!!')
-                 finally_result = connect_handler_to_device(ip_address,
-                                                            #int(manufacturer) ,
-                                                            int(platform),
-                                                            int(device_type),
-                                                            #int(site_name),
-                                                            int(location),
-                                                            location_add,
-                                                            int(device_role),
-                                                            int(tenants),
-                                                            int(management),
-                 )
+                 connecting = CONNECT_HANDLER(ip_address,int(platform),int(device_type),int(location),location_add,
+                                              int(device_role),int(tenants),int(management))
+                 finally_result = connecting.connect_handler_to_device()
                  form = IpAddressForm()
                  #print(ip_address,manufacturer, site_name, device_role, tenants)
                  if finally_result == True:

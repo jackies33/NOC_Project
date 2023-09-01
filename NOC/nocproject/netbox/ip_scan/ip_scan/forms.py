@@ -59,6 +59,7 @@ class IpAddressForm(forms.Form):
     choices_tenants = psql.postgre_conn_tenant()
     choices_management = [(1,'Active'),(2,'Offline')]
 
+
     ip_address = forms.CharField(label='IP address', max_length=20,help_text='primary ip address for network device management', widget=forms.TextInput(attrs={'class': 'myfield'}))
     #manufacturer = forms.ChoiceField(label='Vendor' , choices=choices_manufacturer,help_text="Vendor's name", widget=forms.Select(attrs={'class': 'myfield'}))
     platform = forms.ChoiceField(label='Platform' , choices=choices_platform,help_text="Platform", widget=forms.Select(attrs={'class':'myfield'}))

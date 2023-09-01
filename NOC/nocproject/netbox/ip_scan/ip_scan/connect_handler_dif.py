@@ -1,7 +1,7 @@
 
 
 import socket
-from .add_device import add_device
+from .add_device import ADD_NB
 from .classifier import classifier_device_type
 from .my_pass import mylogin , mypass
 from netmiko import ConnectHandler , NetMikoAuthenticationException, NetMikoTimeoutException
@@ -15,7 +15,26 @@ from lxml import etree
 login = mylogin
 password = mypass
 
-class conn_device():
+class CONNECT_DEVICE():
+
+        """
+        Class for connection to different device
+        """
+
+        def __init__(self, ip_conn = None,mask = None,platform = None,site_name = None,
+                     location = None,device_role = None,tenants = None,conn_scheme = None,management = None):
+
+            self.ip_conn = ip_conn
+            self.mask = mask
+            self.platform = platform
+            self.site_name = site_name
+            self.location = location
+            self.device_role = device_role
+            self.tenants = tenants
+            self.conn_scheme = conn_scheme
+            self.management = management
+
+
         def check_ssh(self,ip_conn):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex((ip_conn, 22))
@@ -46,48 +65,49 @@ class conn_device():
                 }
                 return host1
 
-        def conn_Huawei(self,ip_conn,mask,platform,device_type,site_name,location,device_role,tenants,conn_scheme,management):
+        def conn_Huawei(self,*args):
 
                type_device_for_conn = 'huawei'
-               host1 = self.template_conn(ip_conn,type_device_for_conn)
+               host1 = self.template_conn(self.ip_conn,type_device_for_conn)
 
 
                try:
 
                         with ConnectHandler(**host1) as net_connect:
-                                primary_ip = (f'{ip_conn}/{mask}')
+                                primary_ip = (f'{self.ip_conn}/{self.mask}')
 
                                 output_name_result = net_connect.send_command('display current-configuration | include sysname',
                                                                               delay_factor=.5)  # command result
                                 device_name = re.findall(r"sysname \S+", output_name_result)[0].split('sysname ')[1]
                                 output_version = net_connect.send_command('display version',
                                                                           delay_factor=.5)
-                                command_ip = (f'display ip interface brief  | include {ip_conn}')
+                                command_ip = (f'display ip interface brief  | include {self.ip_conn}')
                                 output_ip = net_connect.send_command(command_ip, delay_factor=.5)
-                                escaped_ip_address = re.escape(ip_conn)
+                                escaped_ip_address = re.escape(self.ip_conn)
                                 re_ip = (f"(\S+)\s+{escaped_ip_address}")
                                 interface_name = re.findall(re_ip, output_ip)[0]
                                 device_type = classifier_device_type(re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q', output_version)[0])
                                 # print(device_name,device_type,interface_name)
                                 net_connect.disconnect()
                                 manufacturer = 'huawei-technologies-co'
-                                add_device(device_name, site_name,location, tenants, device_role,manufacturer,
-                                                           platform, device_type, primary_ip, interface_name,conn_scheme,management)
+                                adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
+                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management)
+                                adding.add_device()
 
 
                except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
-                    print('\n\n not connect to ' + ip_conn + '\n\n')
+                    print('\n\n not connect to ' + self.ip_conn + '\n\n')
 
 
-        def conn_Juniper_rpc(self,ip_conn,mask,platfrom,device_type,site_name,location,device_role,tenants,conn_scheme,management):
+        def conn_Juniper_rpc(self,*args):
 
                print('this is connect_to_device_juniper!!!!')
                #host1 = self.template_conn(ip_conn,manufacturer)
 
                try:
 
-                                primary_ip = (f'{ip_conn}/{mask}')
-                                dev = Device(host=ip_conn, user='nocproject', password='h#JN0C8b')
+                                primary_ip = (f'{self.ip_conn}/{self.mask}')
+                                dev = Device(host=self.ip_conn, user='nocproject', password='h#JN0C8b')
                                 dev.open()
 
                                 device_name = dev.facts['hostname']
@@ -100,7 +120,7 @@ class conn_device():
                                                            <family>
                                                               <inet>
                                                                  <address>
-                                                                    <name>{ip_conn}/{mask}</name>
+                                                                    <name>{self.ip_conn}/{self.mask}</name>
                                                                  </address>
                                                               </inet>
                                                            </family>
@@ -133,12 +153,13 @@ class conn_device():
                                 device_type = classifier_device_type(device_type)
                                 print('this is connect_to_device_juniper_out!!!!')
                                 manufacturer = 'juniper-networks'
-                                add_device(device_name, site_name, location , tenants, device_role, manufacturer,
-                                           platfrom , device_type, primary_ip, interface_name,conn_scheme,management)
+                                adding = ADD_NB(device_name, self.site_name, self.location , self.tenants, self.device_role, manufacturer,
+                                           self.platform , device_type, primary_ip, interface_name,self.conn_scheme,self.management)
+                                adding.add_device()
 
                except (ConnectAuthError, ConnectClosedError,ConnectError,ConnectTimeoutError):  # exceptions
-                    print('\n\n not connect to ' + ip_conn + '\n\n')
+                    print('\n\n not connect to ' + self.ip_conn + '\n\n')
 
 
 if __name__ == '__main__':
-     print('main')
+     adding = CONNECT_DEVICE()

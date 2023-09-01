@@ -1,6 +1,4 @@
 
-
-
 import traceback
 import time
 import pynetbox
@@ -8,80 +6,103 @@ from .tgbot import tg_bot
 import datetime
 from .my_pass import netbox_url,netbox_api_token
 
+class ADD_NB():
 
-status = 'active'
-type_of_interface = 'virtual'
-aobjt = 'dcim.interface'
+        """
+        class for add data to NetBox over RestApi
+        """
 
-def add_device(name , site , location, tenants , device_role , manufacturer ,platform, device_type ,
-               primary_ip , interface_name ,conn_scheme, management):
-    print('this is add_device.py!!!!')
-    print(site)
-    #print (status , str(name),str(primary_ip),int(site[1]),int(device_role[0]),int(device_type),int(tenants[0]))
+        def __init__(self, name_device, site, location, tenants, device_role,
+                     manufacturer,platform, device_type,
+                       primary_ip, interface_name,conn_scheme, management):
 
-    nb = pynetbox.api(url=netbox_url,
-                      token=netbox_api_token)
-    nb.http_session.verify = False
+            self.status = 'active'
+            self.type_of_interface = 'virtual'
+            self.aobjt = 'dcim.interface'
+            self.name_device = name_device
+            self.site = site
+            self.location =location
+            self.tenants = tenants
+            self.device_role = device_role
+            self.manufacturer = manufacturer
+            self.platform = platform
+            self.device_type = device_type
+            self.primary_ip = primary_ip
+            self.interface_name = interface_name
+            self.conn_scheme = conn_scheme
+            self.management = management
 
-    try:
-        nb.dcim.devices.create(
-               name=name,
-               status = str(management[1]).lower(),
-               site=site[1],
-               location=location[0],
-               device_role=device_role[0],
-               manufacturer=manufacturer[1].title(),
-               platform=platform[0],
-               device_type = device_type,
-               primary_ip = primary_ip,
-               tenant = tenants[0],
-               custom_fields = {'Connection_scheme': conn_scheme},
-        )
+        def add_device(self,*args):
+            print('this is add_device.py!!!!')
+            #print (str(name),str(primary_ip),int(site[1]),int(device_role[0]),int(device_type),int(tenants[0]),
+            # conn_scheme,str(management[1].lower))
 
-    except pynetbox.core.query.RequestError:
-               print(f'device {name} is already done or \n')
-               print('Error:\n', traceback.format_exc())
+            nb = pynetbox.api(url=netbox_url,
+                              token=netbox_api_token)
+            nb.http_session.verify = False
 
-    time.sleep(1)
-    id_device = nb.dcim.devices.get(name=name)
-    print(id_device.id)
-    try:
-        create = nb.dcim.interfaces.create(
-            device= id_device.id,
-            name=interface_name,
-            type=type_of_interface,
-            enabled=True,
-    )
-    except pynetbox.core.query.RequestError:
-            print(f'interface {interface_name} is already done')
+            try:
+                nb.dcim.devices.create(
+                       name=self.name_device,
+                       status = str(self.management[1]).lower(),
+                       site=self.site[1],
+                       location=self.location[0],
+                       device_role=self.device_role[0],
+                       manufacturer=self.manufacturer[1].title(),
+                       platform=self.platform[0],
+                       device_type = self.device_type,
+                       primary_ip = self.primary_ip,
+                       tenant = self.tenants[0],
+                       custom_fields = {'Connection_Scheme': str(self.conn_scheme)},
+                )
 
-    time.sleep(1)
-    interface = nb.dcim.interfaces.get(name=interface_name, device_id=id_device.id)
-    interface_id = interface['id']
+            except pynetbox.core.query.RequestError:
+                       print(f'device {self.name_device} is already done or \n')
+                       print('Error:\n', traceback.format_exc())
 
-    try:
-               ip_address = nb.ipam.ip_addresses.create(
-               address=primary_ip,
-               status=status,
-               assigned_object_type=aobjt,
-               assigned_object_id=interface_id,
-               )
+            time.sleep(1)
+            id_device = nb.dcim.devices.get(name=self.name_device)
+            print(id_device.id)
+            try:
+                create = nb.dcim.interfaces.create(
+                    device= id_device.id,
+                    name=self.interface_name,
+                    type=self.type_of_interface,
+                    enabled=True,
+            )
+            except pynetbox.core.query.RequestError:
+                    print(f'interface {self.interface_name} is already done')
 
-    except TypeError:
-        print('Error for create an ip_address')
-        return False
-    time.sleep(1)
+            time.sleep(1)
+            interface = nb.dcim.interfaces.get(name=self.interface_name, device_id=id_device.id)
+            interface_id = interface['id']
 
-    try:
-        id_device.update({'primary_ip4': {'address': primary_ip}})
-    except pynetbox.core.query.RequestError:
-        print(f"ip_address {primary_ip} is already done")
-    else:
-        print(f"Succesfull create and update device - {name} and send to telegram chat")
-        message = (f'Netbox.handler[Event_Add Device]\n Device Name - [ {name} ] \n ip_address - [{primary_ip}] \n Time: {datetime.datetime.now()}')
-        tg_bot.tg_sender(message)
+            try:
+                       ip_address = nb.ipam.ip_addresses.create(
+                       address=self.primary_ip,
+                       status=self.status,
+                       assigned_object_type=self.aobjt,
+                       assigned_object_id=interface_id,
+                       )
+
+            except TypeError:
+                print('Error for create an ip_address')
+                return False
+            time.sleep(1)
+
+            try:
+                id_device.update({'primary_ip4': {'address': self.primary_ip}})
+            except pynetbox.core.query.RequestError:
+                print(f"ip_address {self.primary_ip} is already done")
+            else:
+                print(f"Succesfull create and update device - {self.name_device} and send to telegram chat")
+                message = (f'Netbox.handler[Event_Add Device]\n Device Name - [ {self.name_device} ] '
+                           f'\n ip_address - [{self.primary_ip}] \n Time: {datetime.datetime.now()}')
+                sender = tg_bot(message)
+                sender.tg_sender()
 
 if __name__ == '__main__':
-     add_device()
+     adding = ADD_NB()
+     adding.add_device()
 
 

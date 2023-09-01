@@ -1,21 +1,26 @@
 
 import psycopg2
-from noc.custom.etl.engine.my_pass import netbox_pass,netbox_url
+from noc.custom.etl.engine.my_pass import netbox_pass,psql_url
 
-class psql_conn():
-        conn = psycopg2.connect(
-                            host=netbox_url ,
-                            database="netbox",
-                            user="netbox",
-                            password=netbox_pass,
-                            sslmode='disable',
-                        )
+class PSQL_CONN():
 
+
+
+        def __init__(self,id=None):
+
+            self.conn = psycopg2.connect(
+                                host=psql_url ,
+                                database="netbox",
+                                user="netbox",
+                                password=netbox_pass,
+                                sslmode='disable',
+                            )
+            self.cur = self.conn.cursor()
+            self.id = id
 
         def postgre_conn_locations_add(self):
-            cur = self.conn.cursor()
-            cur.execute("SELECT id , name , parent_id, level, tree_id FROM dcim_location;")
-            locations = (cur.fetchall())
+            self.cur.execute("SELECT id , name , parent_id, level, tree_id FROM dcim_location;")
+            locations = (self.cur.fetchall())
 
             return locations
 
@@ -41,19 +46,19 @@ class psql_conn():
                 for par in tuples_parent:
                     if ch[3] == 1 and ch[4] == par[4]:
                         # print(ch)
-                        child.append((ch[0], f'| {par[1]} || {ch[1]} | '))
+                        child.append((ch[0], f'{par[1]} , {ch[1]}'))
 
                     elif ch[3] == 2 and ch[4] == par[4]:
                         for ch_p in child_tupe:
                             if ch_p[0] == ch[2]:
-                                child.append((ch[0], f'| {par[1]} || {ch_p[1]} || {ch[1]} |'))
+                                child.append((ch[0], f'{par[1]} , {ch_p[1]} , {ch[1]}'))
             return child
 
 
-        def get_result(self,id):
+        def get_result(self,*args):
             prerezult = self.parser()
             for pr in prerezult:
-                if pr[0] == id:
+                if pr[0] == self.id:
                   return pr[1]
                 else:
                     continue
