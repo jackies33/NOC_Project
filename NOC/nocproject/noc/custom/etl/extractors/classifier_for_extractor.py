@@ -4,7 +4,7 @@
 class CLASSIFIER():
 
         """
-        Class for classification some things for noc's extractor
+        Class for classification some things for noc's extractors
 
         """
 
