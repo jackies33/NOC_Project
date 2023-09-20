@@ -74,8 +74,6 @@ class CONNECT_DEVICE():
                try:
 
                         with ConnectHandler(**host1) as net_connect:
-                                primary_ip = (f'{self.ip_conn}/{self.mask}')
-
                                 output_name_result = net_connect.send_command('display current-configuration | include sysname',
                                                                               delay_factor=.5)  # command result
                                 device_name = re.findall(r"sysname \S+", output_name_result)[0].split('sysname ')[1]
@@ -85,8 +83,12 @@ class CONNECT_DEVICE():
                                 output_ip = net_connect.send_command(command_ip, delay_factor=.5)
                                 escaped_ip_address = re.escape(self.ip_conn)
                                 re_ip = (f"(\S+)\s+{escaped_ip_address}")
+                                re_ip1 = (f"{escaped_ip_address}\S+")
                                 interface_name = re.findall(re_ip, output_ip)[0]
-                                device_type = classifier_device_type(re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q', output_version)[0])
+                                primary_ip = re.findall(re_ip1, output_ip)[0]
+                                device_type = classifier_device_type(re.findall(
+                                    r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q|S5700-28C-EI-24S|S5735-S48S4X'
+                                    , output_version)[0])
                                 # print(device_name,device_type,interface_name)
                                 net_connect.disconnect()
                                 manufacturer = 'huawei-technologies-co'
