@@ -27,26 +27,6 @@ class NBRemoteSystem(BaseRemoteSystem):
         """
 
 
-
-
-
-@NBRemoteSystem.extractor
-class NBAuthProfile(BaseExtractor):
-    """
-    """
-
-    name = "authprofile"
-    model = AuthProfile
-
-
-
-    data = [
-        ['2', "nocproject", "","","","h#JN0C8b","","nocproject",""],
-        ['3', "nocproject1", "","","","h#JN0C8b","","nocpr0ject",""],
-    ]
-
-
-
 @NBRemoteSystem.extractor
 class NBManagedObjectProfileExtractor(BaseExtractor):
     """

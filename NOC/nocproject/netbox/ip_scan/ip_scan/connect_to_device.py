@@ -90,7 +90,7 @@ class CONNECT_HANDLER():
                         location = location_add
                     elif result_location == False:
                         location = location
-                    #print('this is connecthadler3!!!!')
+                    print('this is connecthadler3!!!!')
                     #print(location)
                     site_name = psql.postgre_conn_site(location[0])[0]
                     #print(platform,device_role,tenants,management,self.device_type)
@@ -103,6 +103,12 @@ class CONNECT_HANDLER():
                          connection = CONNECT_DEVICE(ip_conn,mask,platform,site_name,
                                                     location,device_role,tenants,conn_scheme,management)
                          connection.conn_Juniper_rpc()
+
+                    if platform[1] == "IBM.NOS":
+                         connection = CONNECT_DEVICE(ip_conn, mask, platform, site_name,
+                                                    location, device_role, tenants, conn_scheme, management)
+                         connection.conn_IBM_lenovo_sw()
+
 
 
 if __name__ == '__main__':
