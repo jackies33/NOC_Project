@@ -9,7 +9,9 @@ import re
 from jnpr.junos.exception import ConnectAuthError,ConnectClosedError,ConnectError,ConnectTimeoutError
 from jnpr.junos import Device
 from lxml import etree
-
+import time
+import paramiko
+from paramiko import SSHException
 
 
 login = mylogin
@@ -109,7 +111,6 @@ class CONNECT_DEVICE():
                                 primary_ip = (f'{self.ip_conn}/{self.mask}')
                                 dev = Device(host=self.ip_conn, user='nocproject', password='h#JN0C8b')
                                 dev.open()
-
                                 device_name = dev.facts['hostname']
                                 device_type = dev.facts['model']
                                 config = dev.rpc.get_config(filter_xml=etree.XML(f'''
@@ -160,6 +161,41 @@ class CONNECT_DEVICE():
                except (ConnectAuthError, ConnectClosedError,ConnectError,ConnectTimeoutError):  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
 
+
+        def conn_IBM_lenovo_sw(self,*args):
+            primary_ip = (f'{self.ip_conn}/{self.mask}')
+            ssh = paramiko.SSHClient()
+            ssh.load_system_host_keys()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            cmnd1 = 'en\n'
+            cmnd2 = '\nshow system\n\n\n\n'
+            ssh.connect(self.ip_conn,
+                        username=mylogin,
+                        password=mypass,
+                        look_for_keys=False,
+                        allow_agent=False)
+            try:
+                        ssh1 = ssh.invoke_shell()
+                        time.sleep(4)
+                        ssh1.send(cmnd1)
+                        time.sleep(1)
+                        ssh1.send(cmnd2)
+                        time.sleep(1)
+                        output_name_result = (ssh1.recv(65535).decode("utf-8"))
+                        time.sleep(3)
+                        ssh1.close()
+                        preresult1 = re.findall(r'sysName:     \S+', output_name_result)[0].split('sysName:     ')[1]
+                        device_name = preresult1.split('"')[1]
+                        device_type = classifier_device_type(re.findall(r'Flex System Fabric EN4093R 10Gb Scalable Switch', output_name_result)[0])
+                        interface_name = 'EXTM'
+                        manufacturer = 'LENOVO'
+                        adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
+                                                   self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management)
+                        adding.add_device()
+            except IndexError as e:
+                        print(f"\n\n\n{e}\n\n\n")
+            except SSHException as s:
+                        print(f"\n\n\n{s}\n\n\n")
 
 if __name__ == '__main__':
      adding = CONNECT_DEVICE()
