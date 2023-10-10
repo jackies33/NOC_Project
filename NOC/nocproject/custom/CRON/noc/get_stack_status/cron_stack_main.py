@@ -2,7 +2,7 @@
 import schedule
 import time
 from db_exec import PSQL_CONN,MONGO,CH
-from conn_dev import CONNECT_DEVICE
+from NOC.nocproject.custom.CRON.noc.get_stack_status.conn_dev import CONNECT_DEVICE
 
 
 
