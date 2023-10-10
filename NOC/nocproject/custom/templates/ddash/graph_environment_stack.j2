@@ -1,0 +1,96 @@
+{
+  "title": "Environment | Stack",
+  "aliasColors": {},
+  "bars": false,
+  "datasource": null,
+  "fill": 1,
+  "grid": {
+    "threshold1": null,
+    "threshold1Color": "rgba(216, 200, 27, 0.27)",
+    "threshold2": null,
+    "threshold2Color": "rgba(234, 112, 112, 0.22)"
+  },
+  "id": 1151604870714532,
+  "legend": {
+    "alignAsTable": true,
+    "avg": true,
+    "current": true,
+    "max": true,
+    "min": true,
+    "show": true,
+    "sortDesc": true,
+    "total": false,
+    "values": true
+  },
+  "lines": true,
+  "linewidth": 2,
+  "links": [],
+  "nullPointMode": "connected",
+  "percentage": false,
+  "pointradius": 5,
+  "points": false,
+  "renderer": "flot",
+  "scopedVars": {
+    "{{member_name}}": {
+      "selected": true,
+      "text": "{{member_name}}"
+    }
+  },
+  "seriesOverrides": [
+  {
+      "alias": "State",
+      "yaxis": 2,
+      "fill": 0
+    }
+  ],
+  "span": 6,
+  "stack": false,
+  "steppedLine": false,
+  "targets": [
+    {
+      "resultFormat": "time_series",
+      "intervalFactor": 1,
+      "query":"SELECT \n    t, \n    groupArray((member_name, Status)) AS groupArr \nFROM (\n    SELECT $timeSeries as t, \n        member_name, \n        avg(status) as `Status` \n    FROM \n        $table \n    WHERE \n        managed_object=$bi_id \n        and $timeFilter\n    GROUP BY member_name, t ORDER BY t) \nGROUP BY t \nORDER BY t",
+      "refId": "A",
+      "database": "{{ noc_db_metrics }}",
+      "tableLoading": false,
+      "table": "stack",
+      "dateLoading": false,
+      "datetimeLoading": false,
+      "dateColDataType": "date",
+      "dateTimeColDataType": "ts"
+    }
+  ],
+  "timeFrom": null,
+  "timeShift": null,
+  "tooltip": {
+    "msResolution": false,
+    "shared": true,
+    "sort": 0,
+    "value_type": "cumulative"
+  },
+  "type": "graph",
+  "x-axis": true,
+  "xaxis": {
+    "show": true
+  },
+  "y-axis": true,
+  "yaxes": [
+    {
+      "format": "",
+      "label": null,
+      "logBase": 1,
+      "max": 2,
+      "min": 0,
+      "show": true
+    },
+    {
+      "format": "short",
+      "label": null,
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "show": true
+    }
+  ]
+}
