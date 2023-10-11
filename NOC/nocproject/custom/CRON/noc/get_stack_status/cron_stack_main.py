@@ -2,9 +2,7 @@
 import schedule
 import time
 from db_exec import PSQL_CONN,MONGO,CH
-from NOC.nocproject.custom.CRON.noc.get_stack_status.conn_dev import CONNECT_DEVICE
-
-
+from conn_dev import CONNECT_DEVICE
 
 ''' 
 for daemon setup script
@@ -40,8 +38,6 @@ ______________________________
 <<--- run next commands
 
 '''
-
-
 
 
 """
@@ -114,14 +110,10 @@ def executer_run():
             my_list = ''
 
 
-
-
 int = INVENTORY(profile_list)
 schedule.every(5).minutes.do(executer_run)
 schedule.every(24).hours.do(int.start_job_inventory)
 
-
-#"""
 while i == 0:
     my_inventory = int.start_job_inventory(profile_list)
     time.sleep(1)
@@ -129,4 +121,3 @@ while i == 0:
 while i == 1:
     schedule.run_pending()
     time.sleep(1)
-#"""

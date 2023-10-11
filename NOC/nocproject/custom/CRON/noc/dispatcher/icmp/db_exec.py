@@ -1,10 +1,11 @@
 
 
+
+
 import psycopg2
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime
-import re
 import clickhouse_driver
 from pytz import timezone
 from my_pass import pass_noc,user_noc
@@ -15,9 +16,9 @@ class PSQL_CONN():
                 Class for psql connection and collecting some data
                 """
 
-                def __init__(self,id1=None,list1=None):
-                        self.id1=id1
-                        self.list1 = list1
+                def __init__(self,list1=None,list2=None):
+                        self.list1=list1
+                        self.list2 = list2
                         self.conn = psycopg2.connect(
                             host="10.50.50.170",
                             database="noc",
@@ -29,12 +30,12 @@ class PSQL_CONN():
 
 
                 def postgre_conn_inv(self,*args):
-                        self.cur.execute(f"select id,name,address,object_profile_id,bi_id,vendor from sa_managedobject where object_profile_id IN ({self.id1});")
+                        self.cur.execute(f"select id,name,address,bi_id,segment from sa_managedobject where segment IN ({self.list1});")
                         tuple = (self.cur.fetchall())
                         return tuple
 
                 def get_id(self, *args):
-                        self.cur.execute(f"select id from sa_managedobjectprofile where name IN ({self.list1});")
+                        self.cur.execute(f"select id from sa_managedobjectprofile where name IN ({self.list2});")
                         tuple = (self.cur.fetchall())
                         return tuple
 
@@ -43,13 +44,14 @@ class MONGO():
 
       """class for connection and recieve data from mongo DB"""
 
-      def __init__(self,id1=None,id2=None):
+      def __init__(self,id1=None,id_list2=None):
           self.id1=id1
-          self.id2=id2
+          self.id_list2=id_list2
 
 
 
       def get_vendor(self,*args):
+          #collection = self.db[f'noc.vendors.find({"_id" : ObjectId("{self.id1}")})']
           name = ''
           client = MongoClient(f'mongodb://noc:{user_noc}@kr01-mongodb01:27017/{pass_noc}')
           db = client['noc']
@@ -64,16 +66,18 @@ class MONGO():
               result.update({"id":id,"name":name})
           return result
 
-      def get_bi_id(self,*args):
+      def get_segment_id(self, *args):
           name = ''
           client = MongoClient(f'mongodb://noc:{user_noc}@kr01-mongodb01:27017/{pass_noc}')
           db = client['noc']
-          collection = db['ds_managedobject']
-          id = int(self.id2)
-          find = collection.find({"_id" : id})
-          #for d in find:
-           #  print(d)
-
+          collection = db['noc.networksegments']
+          result = []
+          for name in self.id_list2:
+              find = collection.find_one({"name": name})
+              if find:
+                  id = str(find.get("_id"))
+                  result.append({"name": name, "id": id})
+          return result
 
 
 class CH():
@@ -97,29 +101,26 @@ class CH():
             database='noc'
         )
 
-    def ch_insert(self,*args):
-         cursor1 = self.connection1.cursor()
-         cursor2 = self.connection2.cursor()
-         tz = timezone('Europe/Moscow')
-         date = datetime.now(tz).strftime('%Y-%m-%d')
-         timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
-         query = "INSERT INTO stack (date, ts, metric_type, managed_object, member_name, member_id, status) VALUES "
-         for data in self.mylist:
-             member = data["obj_target"]
-             managed_object = data["obj_bi_id"]
-             for mem in member:
-                 member = mem.keys()
-                 stat = mem.values()
-                 for m, s in zip(member, stat):
-                     member_name = m
-                     member_id = int(re.findall(r"Member_id:\d+", member_name)[0].split("Member_id:")[1])
-                     status = int(s)
-                     query += "".join(f"('{date}','{timenow}','',{managed_object}, '{member_name}', '{member_id}', {status}),")
-         query = query.rstrip(",")
-         query = (f"{query};")
-         cursor1.execute(query)
-         results1 = cursor1.fetchall()
-         cursor2.execute(query)
-         results2 = cursor2.fetchall()
-         self.connection1.close()
-         self.connection2.close()
+    def ch_insert(self, *args):
+        cursor1 = self.connection1.cursor()
+        cursor2 = self.connection2.cursor()
+        tz = timezone('Europe/Moscow')
+        date = datetime.now(tz).strftime('%Y-%m-%d')
+        timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
+        query = "INSERT INTO disp_icmp (date, ts, metric_type, managed_object, mo_name, mo_ip, mo_segment, status) VALUES "
+        for data in self.mylist:
+            status = data["obj_result"]
+            bi_id = data["obj_bi_id"]
+            obj_name = data["obj_name"]
+            obj_segment = data["obj_segment"]
+            obj_ip = data["obj_ip_address"]
+            query += "".join(f"('{date}','{timenow}','',{bi_id}, '{obj_name}', '{obj_ip}', '{obj_segment}', {status}),")
+        query = query.rstrip(",")
+        query = (f"{query};")
+        cursor1.execute(query)
+        results1 = cursor1.fetchall()
+        cursor2.execute(query)
+        results2 = cursor2.fetchall()
+        self.connection1.close()
+        self.connection2.close()
+
