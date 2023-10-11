@@ -1,0 +1,10 @@
+
+SELECT mo_name AS MO, mo_ip AS IP, mo_segment AS Segment, status AS Status, ts AS t
+FROM (
+    SELECT  mo_name, mo_ip, mo_segment, status, ts,
+           ROW_NUMBER() OVER (PARTITION BY mo_name ORDER BY ts DESC) AS rn
+    FROM noc.disp_icmp
+) t
+WHERE rn = 1
+ORDER BY mo_name
+
