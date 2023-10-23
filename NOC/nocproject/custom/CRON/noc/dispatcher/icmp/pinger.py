@@ -11,19 +11,20 @@ class ICMP():
     def icmp_ping(self,my_dict):
         name = my_dict["obj_name"]
         my_ip = my_dict["obj_ip"]
+        my_id = my_dict["obj_id"]
         my_segment = my_dict["obj_segment_name"]
         my_bi_id = my_dict["obj_bi_id"]
-        response = subprocess.call(["ping", "-c", "1", "-W", "1" ,my_ip])
-        if response == 0:
-                icmp_result = {"obj_ip_address":my_ip,"obj_name":name,"obj_segment":my_segment,"obj_bi_id":my_bi_id,"obj_result":1}
-        else:
-                for i in range(2):
-                    response = subprocess.call(["ping", "-c", "1", my_ip])
-                    if response == 0:
-                        icmp_result = {"obj_ip_address":my_ip,"obj_name":name,"obj_segment":my_segment,"obj_bi_id":my_bi_id,"obj_result":1}
-                        break
-                    else:
-                        icmp_result = {"obj_ip_address":my_ip,"obj_name":name,"obj_segment":my_segment,"obj_bi_id":my_bi_id,"obj_result":0}
+        with open('/dev/null', 'w') as devnull:
+           response = subprocess.call(["ping", "-c", "1", "-W", "1" ,my_ip], stdout=devnull, stderr=subprocess.STDOUT)
+           if response == 0:
+                        icmp_result = {"obj_id":my_id,"obj_ip_address":my_ip,"obj_name":name,"obj_segment":my_segment,"obj_bi_id":my_bi_id,"obj_result":3}
+           else:
+                        for i in range(2):
+                            if response == 0:
+                                icmp_result = {"obj_id":my_id,"obj_ip_address":my_ip,"obj_name":name,"obj_segment":my_segment,"obj_bi_id":my_bi_id,"obj_result":3}
+                                break
+                            else:
+                                icmp_result = {"obj_id":my_id,"obj_ip_address":my_ip,"obj_name":name,"obj_segment":my_segment,"obj_bi_id":my_bi_id,"obj_result":1}
         return icmp_result
 
     def executer_icmp(self,*args):

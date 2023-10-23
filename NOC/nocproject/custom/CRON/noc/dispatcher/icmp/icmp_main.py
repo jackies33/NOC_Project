@@ -41,6 +41,8 @@ ______________________________
 '''
 
 
+
+
 """
 'id' managed_object_profile for get data, if you need to find out the number of id,
 execute the next query from postgresql - 'select id,name from sa_managedobjectprofile;'
@@ -96,20 +98,42 @@ class INVENTORY():
             return dict_result
 
 
+def calculate_alarm(alarm_list, target_list):
+    new_list = []
+    if alarm_list != []:
+        for alarm in alarm_list:
+                for target in target_list:
+                    t_id = target["obj_id"]
+                    t_result = target["obj_result"]
+                    if t_id == alarm:
+                        if t_result == 3:
+                            target["obj_result"] = 2
+                        elif t_result == 1:
+                            pass
+
+                        new_list.append(target)
+                    else:
+                        new_list.append(target)
+    elif alarm_list == []:
+        new_list.extend(target_list)
+    return new_list
+
+
 def executer_run():
     target_list = []
     icmp_exec = ICMP(my_inventory)
     results = icmp_exec.executer_icmp()
     for future in results:
         target_list.append(future.result())
-    ch = CH(target_list)
+    mongodb = MONGO()
+    alarm_list = mongodb.get_alarm()
+    new_list = calculate_alarm(alarm_list,target_list)
+    ch = CH(new_list)
     result = ch.ch_insert()
-
 
 int = INVENTORY(segments_list)
 schedule.every(60).seconds.do(executer_run)
-schedule.every(6).hours.do(int.start_job_inventory)
-
+schedule.every(2).hours.do(int.start_job_inventory)
 
 while i == 0:
     my_inventory = int.start_job_inventory(segments_list)
