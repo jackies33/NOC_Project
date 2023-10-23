@@ -1,10 +1,7 @@
 
 
-
-
 import psycopg2
 from pymongo import MongoClient
-from bson.objectid import ObjectId
 from datetime import datetime
 import clickhouse_driver
 from pytz import timezone
@@ -50,21 +47,27 @@ class MONGO():
 
 
 
-      def get_vendor(self,*args):
-          #collection = self.db[f'noc.vendors.find({"_id" : ObjectId("{self.id1}")})']
-          name = ''
+      def get_alarm(self):
           client = MongoClient(f'mongodb://noc:{user_noc}@kr01-mongodb01:27017/{pass_noc}')
           db = client['noc']
-          collection = db['noc.vendors']
-          post_id = f"{self.id1}"
-          find = collection.find_one({"_id" : ObjectId(post_id)})
-          result={}
-          if find:
-              name = str(find.get("name"))
-              id = str(find.get("_id"))
-              id.split('ObjectId')
-              result.update({"id":id,"name":name})
-          return result
+          collection = db['noc.alarms.active']
+          find = collection.find()
+          list_for_alarm = []
+          for dict in find:
+              vars = dict['vars']
+              manged_object = dict["managed_object"]
+              if vars == {}:
+                  continue
+              elif vars != {}:
+                  inteface = vars["interface"]
+                  if inteface != '':
+                      if manged_object in list_for_alarm:
+                          continue
+                      elif manged_object not in list_for_alarm:
+                          list_for_alarm.append(manged_object)
+                  else:
+                      continue
+          return list_for_alarm
 
       def get_segment_id(self, *args):
           name = ''
@@ -123,4 +126,5 @@ class CH():
         results2 = cursor2.fetchall()
         self.connection1.close()
         self.connection2.close()
+
 
