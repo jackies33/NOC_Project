@@ -1,6 +1,5 @@
 
 
-
 import psycopg2
 from pymongo import MongoClient
 from datetime import datetime
@@ -46,28 +45,21 @@ class MONGO():
           self.id1=id1
           self.id_list2=id_list2
 
-
-
       def get_alarm(self):
           client = MongoClient(f'mongodb://noc:{user_noc}@kr01-mongodb01:27017/{pass_noc}')
           db = client['noc']
           collection = db['noc.alarms.active']
           find = collection.find()
+          int_class = "64c8db8f498777ecdeb4c2d9"
           list_for_alarm = []
           for dict in find:
-              vars = dict['vars']
-              manged_object = dict["managed_object"]
-              if vars == {}:
+              alarm_class = str(dict['alarm_class'])
+              moname = dict['managed_object']
+              if alarm_class == int_class:
+                  list_for_alarm.append(moname)
+              else:
                   continue
-              elif vars != {}:
-                  inteface = vars["interface"]
-                  if inteface != '':
-                      if manged_object in list_for_alarm:
-                          continue
-                      elif manged_object not in list_for_alarm:
-                          list_for_alarm.append(manged_object)
-                  else:
-                      continue
+
           return list_for_alarm
 
       def get_segment_id(self, *args):
@@ -106,27 +98,35 @@ class CH():
         )
 
     def ch_insert(self, *args):
-        cursor1 = self.connection1.cursor()
-        cursor2 = self.connection2.cursor()
-        tz = timezone('Europe/Moscow')
-        date = datetime.now(tz).strftime('%Y-%m-%d')
-        timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
-        query = "INSERT INTO disp_icmp (date, ts, metric_type, managed_object, mo_name, mo_ip, mo_segment, status) VALUES "
-        for data in self.mylist:
-            status = data["obj_result"]
-            bi_id = data["obj_bi_id"]
-            obj_name = data["obj_name"]
-            obj_segment = data["obj_segment"]
-            obj_ip = data["obj_ip_address"]
-            query += "".join(f"('{date}','{timenow}','',{bi_id}, '{obj_name}', '{obj_ip}', '{obj_segment}', {status}),")
-        query = query.rstrip(",")
-        query = (f"{query};")
-        cursor1.execute(query)
-        results1 = cursor1.fetchall()
-        cursor2.execute(query)
-        results2 = cursor2.fetchall()
-        self.connection1.close()
-        self.connection2.close()
-        return  results1,results2
+        try:
+                cursor1 = self.connection1.cursor()
+                cursor2 = self.connection2.cursor()
+                tz = timezone('Europe/Moscow')
+                date = datetime.now(tz).strftime('%Y-%m-%d')
+                timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
+                query = "INSERT INTO disp_icmp (date, ts, metric_type, managed_object, mo_name, mo_ip, mo_segment, status) VALUES "
+                for data in self.mylist:
+                    status = data["obj_result"]
+                    bi_id = data["obj_bi_id"]
+                    obj_name = data["obj_name"]
+                    obj_segment = data["obj_segment"]
+                    obj_ip = data["obj_ip_address"]
+                    query += "".join(f"('{date}','{timenow}','',{bi_id}, '{obj_name}', '{obj_ip}', '{obj_segment}', {status}),")
+                query = query.rstrip(",")
+                query = (f"{query};")
+                cursor1.execute(query)
+                results1 = cursor1.fetchall()
+                cursor2.execute(query)
+                results2 = cursor2.fetchall()
+                self.connection1.close()
+                self.connection2.close()
+                return  results1,results2
 
-
+        except clickhouse_driver.dbapi.errors.OperationalError as e:
+            print(f"OperationalError: {e}")
+        except clickhouse_driver.errors.NetworkError as e:
+            print(f"NetworkError: {e}")
+        except clickhouse_driver.errors.SocketTimeoutError as e:
+            print(f"SocketTimeoutError: {e}")
+        except Exception as e:
+            print(f"Exception: {e}")

@@ -137,10 +137,10 @@ schedule.every(2).hours.do(int.start_job_inventory)
 
 while i == 0:
     my_inventory = int.start_job_inventory(segments_list)
+    #print(my_inventory)
     time.sleep(1)
     i = i+1
 while i == 1:
     schedule.run_pending()
     time.sleep(1)
-
 
