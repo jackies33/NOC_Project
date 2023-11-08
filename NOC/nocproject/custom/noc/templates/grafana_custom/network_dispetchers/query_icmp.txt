@@ -1,0 +1,12 @@
+
+
+SELECT mo_name AS MO, status AS "-"
+FROM (
+    SELECT mo_name, status,
+           ROW_NUMBER() OVER (PARTITION BY mo_name ORDER BY ts DESC) AS rn
+    FROM noc.disp_icmp
+    WHERE mo_segment = 'p/pe'
+)
+WHERE rn = 1
+ORDER BY mo_name
+

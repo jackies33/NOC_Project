@@ -1,0 +1,46 @@
+
+---
+- hosts: mongo_servers
+  become: true
+  tasks:
+    - name: Stop liftbridge service
+      shell: |
+        sudo systemctl stop liftbridge
+      register: stop_output
+
+    - name: Remove liftbridge data
+      shell: |
+        sudo rm -rf /var/lib/liftbridge/*
+      register: remove_output
+
+    - name: Start liftbridge service
+      shell: |
+        sudo systemctl start liftbridge
+      register: start_output
+
+    - name: Run liftbridge migration
+      shell: |
+        cd /opt/noc
+        ./noc migrate-liftbridge
+      register: migration_output
+      until: migration_output.stdout_lines[-1] in ['OK', 'CHANGED']
+      retries: 5
+      delay: 5
+
+    - name: Check output for OK or CHANGED
+      debug:
+        var: migration_output.stdout_lines[-1]
+
+    - name: Restart nats-server
+      shell: |
+        sudo systemctl restart nats-server
+      register: restart_output
+
+    - name: Check liftbridge status
+      shell: |
+        sudo systemctl status liftbridge
+      register: status_output
+
+    - name: Check if liftbridge is active
+      debug:
+        var: status_output.stdout_lines[-3]

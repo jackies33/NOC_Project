@@ -50,7 +50,7 @@ There you'll need to choose only for check stack status profiles
 """
 
 n = None
-segments_list = ['p/pe','core']
+segments_list = ['p/pe','core','dsw']
 my_inventory = []
 "'i' - for correct job scheduler. It's need when you start the service , 'my_inventory' is empty yet, and it's nesseccery to fill it " \
 "'i' - use here like starting point "
@@ -137,10 +137,10 @@ schedule.every(2).hours.do(int.start_job_inventory)
 
 while i == 0:
     my_inventory = int.start_job_inventory(segments_list)
+    #print(my_inventory)
     time.sleep(1)
     i = i+1
 while i == 1:
     schedule.run_pending()
     time.sleep(1)
-
 

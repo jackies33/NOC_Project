@@ -1,0 +1,10 @@
+
+
+[mongo_servers]
+10.50.74.173
+10.50.64.172
+10.50.64.173
+
+[all:vars]
+ansible_user=ansiblecustom
+ansible_ssh_pass=******
