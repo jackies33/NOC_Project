@@ -1,5 +1,6 @@
 
 
+
 import psycopg2
 from pymongo import MongoClient
 from datetime import datetime
@@ -126,5 +127,6 @@ class CH():
         results2 = cursor2.fetchall()
         self.connection1.close()
         self.connection2.close()
+        return  results1,results2
 
 

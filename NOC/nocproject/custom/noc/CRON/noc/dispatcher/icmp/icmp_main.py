@@ -50,7 +50,7 @@ There you'll need to choose only for check stack status profiles
 """
 
 n = None
-segments_list = ['p/pe','core']
+segments_list = ['p/pe','core','dsw']
 my_inventory = []
 "'i' - for correct job scheduler. It's need when you start the service , 'my_inventory' is empty yet, and it's nesseccery to fill it " \
 "'i' - use here like starting point "
