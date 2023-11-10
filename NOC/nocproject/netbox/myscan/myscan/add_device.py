@@ -65,6 +65,8 @@ class ADD_NB():
             except pynetbox.core.query.RequestError:
                        print(f'device {self.name_device} is already done or \n')
                        print('Error:\n', traceback.format_exc())
+                       return False
+
 
             time.sleep(1)
             id_device = nb.dcim.devices.get(name=self.name_device)
@@ -77,6 +79,7 @@ class ADD_NB():
             )
             except pynetbox.core.query.RequestError:
                     print(f'interface {self.interface_name} is already done')
+                    return False
 
             time.sleep(1)
             interface = nb.dcim.interfaces.get(name=self.interface_name, device_id=id_device.id)
@@ -99,14 +102,17 @@ class ADD_NB():
                 id_device.update({'primary_ip4': {'address': self.primary_ip}})
             except pynetbox.core.query.RequestError:
                 print(f"ip_address {self.primary_ip} is already done")
+                return False
             else:
                 print(f"Succesfull create and update device - {self.name_device} and send to telegram chat")
                 message = (f'Netbox.handler[Event_Add Device]\n Device Name - [ {self.name_device} ] '
                            f'\n ip_address - [{self.primary_ip}] \n Time: {datetime.datetime.now()}')
                 sender = tg_bot(message)
                 sender.tg_sender()
+            return [True,self.name_device]
 
 if __name__ == '__main__':
     print("__main__")
+
 
 
