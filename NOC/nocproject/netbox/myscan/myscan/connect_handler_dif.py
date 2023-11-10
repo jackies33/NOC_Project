@@ -11,6 +11,8 @@ from lxml import etree
 import time
 import paramiko
 from paramiko import SSHException
+from airwaveapiclient import AirWaveAPIClient
+
 
 login = mylogin
 password = mypass
@@ -96,7 +98,8 @@ class CONNECT_HANDLER():
 
                except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
-
+               except Exception as e:
+                   print(f"Error {e}")
 
         def conn_Juniper_rpc(self,*args):
                #print('this is connect_to_device_juniper!!!!')
@@ -156,7 +159,8 @@ class CONNECT_HANDLER():
 
                except (ConnectAuthError, ConnectClosedError,ConnectError,ConnectTimeoutError):  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
-
+               except Exception as e:
+                   print(f"Error {e}")
 
         def conn_IBM_lenovo_sw(self,*args):
             primary_ip = (f'{self.ip_conn}/{self.mask}')
@@ -192,7 +196,8 @@ class CONNECT_HANDLER():
                         print(f"\n\n\n{e}\n\n\n")
             except SSHException as s:
                         print(f"\n\n\n{s}\n\n\n")
-
+            except Exception as e:
+                   print(f"Error {e}")
 
         def conn_Cisco_NXOS(self,*args):
                type_device_for_conn = "cisco_nxos"
@@ -213,6 +218,27 @@ class CONNECT_HANDLER():
 
                except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
+               except Exception as e:
+                   print(f"Error {e}")
+
+
+        def conn_AWMP(self,*args):
+               airwave = AirWaveAPIClient(username=mylogin, password=mypass, url=f'https://{self.ip_conn}')
+               try:
+                   airwave.login()
+                   output = airwave.amp_stats().text
+                   device_type = re.findall("<name>.*</name>", output)[0].split('<name>')[1].split('</name>')[0]
+                   primary_ip = (f'{self.ip_conn}/{self.mask}')
+                   interface_name = "VirtInt"
+                   manufacturer = "Hewlett Packard Enterprise"
+                   device_name = f'AWMP_{self.ip_conn}'
+                   adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
+                                   manufacturer,
+                                   self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
+                                   self.management)
+                   adding.add_device()
+               except Exception as e:
+                   print(f"Error {e}")
 
 if __name__ == '__main__':
      print('__main__')

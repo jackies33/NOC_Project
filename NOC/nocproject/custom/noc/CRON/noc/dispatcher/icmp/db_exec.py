@@ -83,7 +83,7 @@ class CH():
     def __init__(self,mylist):
         self.mylist = mylist
         self.connection1 = clickhouse_driver.connect(
-            host='10.50.50.177',
+            host='10.50.50.173',
             port=9000,
             user=user_noc,
             password=pass_noc,
