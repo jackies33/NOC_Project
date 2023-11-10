@@ -1,4 +1,5 @@
 
+
 import socket
 from .add_device import ADD_NB
 from .classifier import classifier_device_type
@@ -93,7 +94,8 @@ class CONNECT_HANDLER():
                                 manufacturer = 'huawei-technologies-co'
                                 adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
                                                            self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management)
-                                adding.add_device()
+                                result = adding.add_device()
+                                return result
 
 
                except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
@@ -155,7 +157,8 @@ class CONNECT_HANDLER():
                                 manufacturer = 'juniper-networks'
                                 adding = ADD_NB(device_name, self.site_name, self.location , self.tenants, self.device_role, manufacturer,
                                            self.platform , device_type, primary_ip, interface_name,self.conn_scheme,self.management)
-                                adding.add_device()
+                                result = adding.add_device()
+                                return result
 
                except (ConnectAuthError, ConnectClosedError,ConnectError,ConnectTimeoutError):  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
@@ -191,7 +194,8 @@ class CONNECT_HANDLER():
                         manufacturer = 'LENOVO'
                         adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
                                                    self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management)
-                        adding.add_device()
+                        result = adding.add_device()
+                        return result
             except IndexError as e:
                         print(f"\n\n\n{e}\n\n\n")
             except SSHException as s:
@@ -214,7 +218,8 @@ class CONNECT_HANDLER():
                                 manufacturer = 'Cisco Systems'
                                 adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
                                                            self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management)
-                                adding.add_device()
+                                result = adding.add_device()
+                                return result
 
                except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
@@ -227,7 +232,7 @@ class CONNECT_HANDLER():
                try:
                    airwave.login()
                    output = airwave.amp_stats().text
-                   device_type = re.findall("<name>.*</name>", output)[0].split('<name>')[1].split('</name>')[0]
+                   device_type = classifier_device_type(re.findall("<name>.*</name>", output)[0].split('<name>')[1].split('</name>')[0])
                    primary_ip = (f'{self.ip_conn}/{self.mask}')
                    interface_name = "VirtInt"
                    manufacturer = "Hewlett Packard Enterprise"
@@ -236,9 +241,12 @@ class CONNECT_HANDLER():
                                    manufacturer,
                                    self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
                                    self.management)
-                   adding.add_device()
+                   result = adding.add_device()
+                   return result
                except Exception as e:
                    print(f"Error {e}")
 
+
 if __name__ == '__main__':
      print('__main__')
+

@@ -37,20 +37,24 @@ class CONNECT_DEVICE():
                     platform = psql.postgre_conn_platform()[0]
                     #choices_management = [(1,'Active'),(2,'Offline')]
                     site_name = psql.postgre_conn_site()
+                    result = []
                     if platform[1] == "Huawei.VRP":
                          connection = CONNECT_HANDLER(ip_conn,mask,platform,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management)
-                         connection.conn_Huawei()
+                         result = connection.conn_Huawei()
                     if platform[1] == "Juniper.JUNOS":
                          connection = CONNECT_HANDLER(ip_conn,mask,platform,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management)
-                         connection.conn_Juniper_rpc()
+                         result = connection.conn_Juniper_rpc()
                     if platform[1] == "IBM.NOS":
                          connection = CONNECT_HANDLER(ip_conn,mask,platform,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management)
-                         connection.conn_IBM_lenovo_sw()
+                         result = connection.conn_IBM_lenovo_sw()
                     if platform[1] == "Cisco.NXOS":
                          connection = CONNECT_HANDLER(ip_conn,mask,platform,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management)
-                         connection.conn_Cisco_NXOS()
+                         result = connection.conn_Cisco_NXOS()
                     if platform[1] == "Aruba.ArubaOS":
-                         connection = CONNECT_HANDLER(ip_conn, mask, platform, site_name, self.location,self.device_role, self.tenants, conn_scheme, self.management)
-                         connection.conn_AWMP()
+                        connection = CONNECT_HANDLER(ip_conn, mask, platform, site_name, self.location,self.device_role, self.tenants, conn_scheme, self.management)
+                        result = connection.conn_AWMP()
+                    return result
+
+
 if __name__ == '__main__':
     print("__main__")

@@ -1,6 +1,7 @@
 
-
+from django.views.generic.edit import CreateView
 from django.shortcuts import render
+from django.urls import reverse_lazy
 from django.views import generic
 from .forms import DevicePluginForm
 from django.http import HttpResponse
@@ -8,7 +9,8 @@ from http import HTTPStatus
 from .connect_to_device import CONNECT_DEVICE
 
 class Add_Device_View(generic.TemplateView):
-    template_name = 'fast_add_device/fast_add_device.html'
+    template_name_success = 'fast_add_device/success.html'
+    template_name_main = 'fast_add_device/main.html'
     form_class = DevicePluginForm
 
     def get_context_data(self, **kwargs):
@@ -18,7 +20,7 @@ class Add_Device_View(generic.TemplateView):
 
     def get(self, request):
         form = DevicePluginForm
-        return render(request, self.template_name, context={'form': form})
+        return render(request, self.template_name_main, context={'form': form})
 
     def post(self, request):
         form = DevicePluginForm(request.POST)
@@ -39,9 +41,15 @@ class Add_Device_View(generic.TemplateView):
             #print(ip_address,platform,device_type,device_role,tenants,location,managment)
             #object_model = DevicesPluginModel.objects.create(**form.cleaned_data)
             #object_model.save()
-            return render(request, self.template_name, context={'form': self.form_class, 'response': "True"}, status=HTTPStatus.CREATED)
+            if connecting[0] == True :
+                #new_success = SuccessView.as_view()
+                #return new_success(request, arg1=connecting[1])
+
+                return render(request, self.template_name_success, context={'response': "True",'connecting': connecting[1]},status=HTTPStatus.CREATED)
+
+            else:
+                return HttpResponse('Something gone wrong', status=HTTPStatus.BAD_REQUEST)
+                #return render(request, self.template_name_main, context={'form': self.form_class, 'response': "True"}, status=HTTPStatus.CREATED)
 
         else:
             return HttpResponse('Something gone wrong', status=HTTPStatus.BAD_REQUEST)
-
-
