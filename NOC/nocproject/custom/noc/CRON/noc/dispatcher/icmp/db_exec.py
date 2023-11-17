@@ -50,15 +50,26 @@ class MONGO():
           db = client['noc']
           collection = db['noc.alarms.active']
           find = collection.find()
-          int_class = "64c8db8f498777ecdeb4c2d9"
-          list_for_alarm = []
-          for dict in find:
-              alarm_class = str(dict['alarm_class'])
-              moname = dict['managed_object']
-              if alarm_class == int_class:
-                  list_for_alarm.append(moname)
-              else:
-                  continue
+          fault_alarm_class = "64c8db8f498777ecdeb4c2b1"
+          input_list = []
+          if find != []:
+              for dict in find:
+                  moname = dict["managed_object"]
+                  alarm = str(dict["alarm_class"])
+                  if alarm == fault_alarm_class:
+                       alarm_dict = {"obj_id":moname,"obj_result":1}
+                  else:
+                       alarm_dict = {"obj_id":moname,"obj_result":2}
+                  input_list.append(alarm_dict)
+          else:
+              pass
+          seen_ids = set()
+          list_for_alarm = [] #for exclude repeated alarm objects
+          for item in input_list:
+              obj_id = item['obj_id']
+              if obj_id not in seen_ids:
+                  seen_ids.add(obj_id)
+                  list_for_alarm.append(item)
 
           return list_for_alarm
 
@@ -80,8 +91,10 @@ class CH():
 
     """Class for connection and execute command to CH server"""
 
-    def __init__(self,mylist):
-        self.mylist = mylist
+    def __init__(self,mylist_insert):
+
+        self.mylist_insert = mylist_insert
+
         self.connection1 = clickhouse_driver.connect(
             host='10.50.50.173',
             port=9000,
@@ -97,6 +110,7 @@ class CH():
             database='noc'
         )
 
+
     def ch_insert(self, *args):
         try:
                 cursor1 = self.connection1.cursor()
@@ -105,7 +119,7 @@ class CH():
                 date = datetime.now(tz).strftime('%Y-%m-%d')
                 timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
                 query = "INSERT INTO disp_icmp (date, ts, metric_type, managed_object, mo_name, mo_ip, mo_segment, status) VALUES "
-                for data in self.mylist:
+                for data in self.mylist_insert:
                     status = data["obj_result"]
                     bi_id = data["obj_bi_id"]
                     obj_name = data["obj_name"]
@@ -130,3 +144,4 @@ class CH():
             print(f"SocketTimeoutError: {e}")
         except Exception as e:
             print(f"Exception: {e}")
+

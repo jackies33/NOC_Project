@@ -34,25 +34,60 @@
     "{{member_name}}": {
       "selected": true,
       "text": "{{member_name}}"
-    }
+   {
+  "id": 1151604870714532,
+  "gridPos": {
+    "x": 0,
+    "y": 19,
+    "w": 8,
+    "h": 7
   },
+  "type": "timeseries",
+  "title": "Environment | Stack",
+  "links": [],
+  "legend": {
+    "alignAsTable": true,
+    "avg": true,
+    "current": true,
+    "max": true,
+    "min": true,
+    "show": true,
+    "sortDesc": true,
+    "total": false,
+    "values": true
+  },
+  "aliasColors": {},
+  "bars": false,
+  "fill": 1,
+  "grid": {
+    "threshold1": null,
+    "threshold1Color": "rgba(216, 200, 27, 0.27)",
+    "threshold2": null,
+    "threshold2Color": "rgba(234, 112, 112, 0.22)"
+  },
+  "lines": true,
+  "linewidth": 2,
+  "nullPointMode": "connected",
+  "percentage": false,
+  "pointradius": 5,
+  "points": false,
+  "renderer": "flot",
   "seriesOverrides": [
-  {
+    {
       "alias": "State",
       "yaxis": 2,
       "fill": 0
     }
   ],
-  "span": 6,
   "stack": false,
   "steppedLine": false,
   "targets": [
     {
       "resultFormat": "time_series",
       "intervalFactor": 1,
-      "query":"SELECT \n    t, \n    groupArray((member_name, Status)) AS groupArr \nFROM (\n    SELECT $timeSeries as t, \n        member_name, \n        avg(status) as `Status` \n    FROM \n        $table \n    WHERE \n        managed_object=$bi_id \n        and $timeFilter\n    GROUP BY member_name, t ORDER BY t) \nGROUP BY t \nORDER BY t",
+      "query": "SELECT \n    t, \n    groupArray((member_name, Status)) AS groupArr \nFROM (\n    SELECT $timeSeries as t, \n        member_name, \n        min(status) as `Status` \n    FROM \n        $table \n    WHERE \n        managed_object=$bi_id \n        and $timeFilter\n    GROUP BY member_name, t ORDER BY t) \nGROUP BY t \nORDER BY t",
       "refId": "A",
-      "database": "{{ noc_db_metrics }}",
+      "database": "noc",
       "tableLoading": false,
       "table": "stack",
       "dateLoading": false,
@@ -69,7 +104,6 @@
     "sort": 0,
     "value_type": "cumulative"
   },
-  "type": "graph",
   "x-axis": true,
   "xaxis": {
     "show": true
@@ -92,5 +126,89 @@
       "min": null,
       "show": true
     }
-  ]
+  ],
+  "options": {
+    "tooltip": {
+      "mode": "single",
+      "sort": "desc"
+    },
+    "legend": {
+      "displayMode": "table",
+      "placement": "bottom",
+      "calcs": [
+        "last"
+      ]
+    }
+  },
+  "fieldConfig": {
+    "defaults": {
+      "custom": {
+        "drawStyle": "line",
+        "lineInterpolation": "linear",
+        "barAlignment": 0,
+        "lineWidth": 2,
+        "fillOpacity": 13,
+        "gradientMode": "hue",
+        "spanNulls": false,
+        "showPoints": "auto",
+        "pointSize": 4,
+        "stacking": {
+          "mode": "normal",
+          "group": "A"
+        },
+        "axisPlacement": "auto",
+        "axisLabel": "",
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "hideFrom": {
+          "tooltip": false,
+          "viz": false,
+          "legend": false
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        },
+        "lineStyle": {
+          "fill": "solid"
+        },
+        "axisWidth": 5
+      },
+      "color": {
+        "mode": "palette-classic"
+      },
+      "mappings": [
+        {
+          "type": "value",
+          "options": {
+            "0": {
+              "text": "FAILED",
+              "color": "semi-dark-red",
+              "index": 1
+            },
+            "1": {
+              "text": "OK",
+              "color": "semi-dark-green",
+              "index": 0
+            }
+          }
+        }
+      ],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          }
+        ]
+      },
+      "unit": "string",
+      "min": -1
+    },
+    "overrides": []
+  },
+  "transparent": true,
+  "repeat": null,
+  "datasource": null
 }
