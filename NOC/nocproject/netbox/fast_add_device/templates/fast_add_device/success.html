@@ -1,6 +1,7 @@
 
 {% extends 'base/layout.html' %}
 {% load static %}
+{% load form_helpers %}
 
 {% block content %}
 <head>
@@ -26,25 +27,13 @@
         }
      </style>
 </head>
-<h2>Fill in all forms</h2>
+<h2 class="offset-3"></h2>
+<br>
 
-    <form method="post">
-        {% csrf_token %}
-         <div>
-          {% for field in form %}
-         <div class="form-group">
-            {{field.label_tag}}
-            <div>{{field}}</div>
-            {% if field.errors%}
-            {% for error in field.errors %}
-            <div class="alert alert-danger">
-                {{error}}
-            </div>
-            {% endfor %}
-            {% endif %}
-         </div>
-          {% endfor %}
-         </div>
-    </form>
+    {% if response %}
+       <p class="offset-3"> Device  < {{ connecting }} >  was added sucessfull. </p>
+    {% endif %}
+<br>
+        <button><a href="{% url 'plugins:fast_add_device:add_device' %}">Add one more device</a></button>
 
 {% endblock %}

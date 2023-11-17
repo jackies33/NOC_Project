@@ -7,7 +7,7 @@ class tg_bot():
     Class for telegram bot , send messages
 
     """
-    from .my_pass import tg_token, chat_id
+    from my_pass import tg_token, chat_id
     def __init__(self,message = None):
         self.message = message
 
@@ -18,11 +18,11 @@ class tg_bot():
                     requests.get(url).json()
                 except ValueError:
                     print("Error send message")
-                return print("send message is succesfull")
+                return print(f"send message <'{self.message}'> is succesfull")
 
 
 if __name__ == '__main__':
-        sender = tg_bot()
+        sender = tg_bot("hi")
         sender.tg_sender()
 
 
