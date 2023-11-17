@@ -22,7 +22,6 @@ Description=Execute ansible tasks for one time in 4 days for liftbridge migratio
 [Service]
 ExecStart=/usr/bin/python3 /opt/ansible/lbreset/scheduler.py
 WorkingDirectory=/opt/ansible/lbreset/
-StandardError=file:/var/log/ansible/lbreset/scheduler_error.log
 Restart=always
 
 [Install]
@@ -54,7 +53,7 @@ def run_playbook():
     time.sleep(10)
     logging.info(f"\n\n\n{timenow} - 'Ansible Output': {result.stdout}\n\n\n")
 
-schedule.every(4).days.do(run_playbook)
+schedule.every(1).days.do(run_playbook)
 
 while True:
     schedule.run_pending()

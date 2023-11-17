@@ -1,9 +1,8 @@
 
-
 import schedule
 import time
 from db_exec import PSQL_CONN,MONGO,CH
-from pinger import ICMP
+
 
 ''' 
 for daemon setup script
@@ -50,10 +49,10 @@ There you'll need to choose only for check stack status profiles
 """
 
 n = None
-segments_list = ['p/pe','core','dsw']
-my_inventory = []
-"'i' - for correct job scheduler. It's need when you start the service , 'my_inventory' is empty yet, and it's nesseccery to fill it " \
-"'i' - use here like starting point "
+segments_list = ['p/pe','core','dsw'] # this list for include specific "network segment" from noc to listen in this app
+my_inventory = [] # zero inventory for starting this app
+#'i' - for correct job scheduler. It's need when you start the service , 'my_inventory' is empty yet, and it's nesseccery to fill it
+#'i' - use here like starting point
 i = 0
 
 class INVENTORY():
@@ -91,45 +90,41 @@ class INVENTORY():
                     if obj_segment_id == d['id']:
                         obj_segment_name = d['name']
                         obj_segment_id = d['id']
-                        dict.update({"obj_id":obj_id,"obj_name":obj_name,"obj_ip":obj_ip,
-                                     "obj_segment_name":obj_segment_name,
-                                     "obj_segment_id":obj_segment_id,"obj_bi_id":obj_bi_id})
+                        dict.update({"obj_id": obj_id, "obj_ip_address": obj_ip,
+                                        "obj_name": obj_name,
+                                        "obj_segment": obj_segment_name, "obj_bi_id": obj_bi_id})
                 dict_result.append(dict)
             return dict_result
 
 
+
 def calculate_alarm(alarm_list, target_list):
     new_list = []
-    if alarm_list != []:
-        for alarm in alarm_list:
-                for target in target_list:
-                    t_id = target["obj_id"]
-                    t_result = target["obj_result"]
-                    if t_id == alarm:
-                        if t_result == 3:
-                            target["obj_result"] = 2
-                        elif t_result == 1:
-                            pass
-
-                        new_list.append(target)
-                    else:
-                        new_list.append(target)
-    elif alarm_list == []:
+    alarm_dict = {item['obj_id']: item['obj_result'] for item in alarm_list}
+    if alarm_list:
+        for target in target_list:
+            t_id = target['obj_id']
+            if t_id in alarm_dict:
+                target['obj_result'] = alarm_dict[t_id]
+                new_list.append(target)
+            else:
+                new_list.append(target)
+    else:
         new_list.extend(target_list)
     return new_list
 
 
+
 def executer_run():
-    target_list = []
-    icmp_exec = ICMP(my_inventory)
-    results = icmp_exec.executer_icmp()
-    for future in results:
-        target_list.append(future.result())
+    for item in my_inventory:
+       item['obj_result'] = 3
     mongodb = MONGO()
     alarm_list = mongodb.get_alarm()
-    new_list = calculate_alarm(alarm_list,target_list)
+    new_list = calculate_alarm(alarm_list,my_inventory)
     ch = CH(new_list)
     result = ch.ch_insert()
+
+
 
 int = INVENTORY(segments_list)
 schedule.every(60).seconds.do(executer_run)
@@ -137,7 +132,6 @@ schedule.every(2).hours.do(int.start_job_inventory)
 
 while i == 0:
     my_inventory = int.start_job_inventory(segments_list)
-    #print(my_inventory)
     time.sleep(1)
     i = i+1
 while i == 1:
