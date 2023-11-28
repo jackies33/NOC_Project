@@ -105,8 +105,8 @@
       "format": "table",
       "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
       "intervalFactor": 1,
-      "query": "\nSELECT mo_name AS MO, status AS \"-\"\nFROM (\n    SELECT mo_name, status,\n           ROW_NUMBER() OVER (PARTITION BY mo_name ORDER BY ts DESC) AS rn\n    FROM noc.disp_icmp\n    WHERE mo_segment = 'dsw'\n)\nWHERE rn = 1\nORDER BY mo_name",
-      "rawQuery": "SELECT mo_name AS MO, status AS \"-\"\nFROM (\n    SELECT mo_name, status,\n           ROW_NUMBER() OVER (PARTITION BY mo_name ORDER BY ts DESC) AS rn\n    FROM noc.disp_icmp\n    WHERE mo_segment = 'dsw'\n)\nWHERE rn = 1\nORDER BY mo_name",
+      "query": "\nSELECT mo_name AS MO, status AS \"-\"\nFROM (\n    SELECT mo_name, status,\n           ROW_NUMBER() OVER (PARTITION BY mo_name ORDER BY ts DESC) AS rn\n    FROM noc.disp_icmp\n    WHERE mo_segment = 'm-dsw'\n)\nWHERE rn = 1\nORDER BY mo_name",
+      "rawQuery": "SELECT mo_name AS MO, status AS \"-\"\nFROM (\n    SELECT mo_name, status,\n           ROW_NUMBER() OVER (PARTITION BY mo_name ORDER BY ts DESC) AS rn\n    FROM noc.disp_icmp\n    WHERE mo_segment = 'm-dsw'\n)\nWHERE rn = 1\nORDER BY mo_name",
       "refId": "A",
       "round": "0s",
       "skip_comments": true
