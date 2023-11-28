@@ -3,6 +3,8 @@ import schedule
 import time
 from db_exec import PSQL_CONN,MONGO,CH
 from conn_dev import CONNECT_DEVICE
+import logging
+import datetime
 
 ''' 
 for daemon setup script
@@ -47,7 +49,7 @@ There you'll need to choose only for check stack status profiles
 """
 
 n = None
-profile_list = "'EX3300-48P','EX2200-48P-4G','EX3300-48P'"
+profile_list = "'EX3400-48P','EX2200-48P-4G','EX3300-48P'"
 my_inventory = []
 "'i' - for correct job scheduler. It's need when you start the service , 'my_inventory' is empty yet, and it's nesseccery to fill it " \
 "'i' - use here like starting point "
@@ -60,6 +62,7 @@ class INVENTORY():
 
 
     def start_job_inventory(self,*args):
+        try:
             psql = PSQL_CONN(n, self.id_list)
             id_list = psql.get_id()
             id1 = ''
@@ -76,48 +79,60 @@ class INVENTORY():
             global my_inventory
             my_inventory = (self.collect_inv(process, obj_vendor))
             return my_inventory
-
+        except Exception as err:
+            logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
 
     def collect_inv(self,inventory,vendor_dict):
             dict_result = []
             for r in inventory:
-                dict = {}
-                obj_id = r[0]
-                obj_name = r[1]
-                obj_ip = r[2]
-                obj_prof_id = r[3]
-                obj_bi_id = r[4]
-                obj_vendor_id = r[5]
-                for d in vendor_dict:
-                    if obj_vendor_id == d['id']:
-                        obj_vendor = d['name']
-                        dict.update({"obj_id":obj_id,"obj_name":obj_name,"obj_ip":obj_ip,
-                                     "obj_prof_id":obj_prof_id,"obj_vendor":obj_vendor,
-                                     "obj_vendor_id":obj_vendor_id,"obj_bi_id":obj_bi_id})
-                dict_result.append(dict)
+                try:
+                    dict = {}
+                    obj_id = r[0]
+                    obj_name = r[1]
+                    obj_ip = r[2]
+                    obj_prof_id = r[3]
+                    obj_bi_id = r[4]
+                    obj_vendor_id = r[5]
+                    for d in vendor_dict:
+                        if obj_vendor_id == d['id']:
+                            obj_vendor = d['name']
+                            dict.update({"obj_id":obj_id,"obj_name":obj_name,"obj_ip":obj_ip,
+                                         "obj_prof_id":obj_prof_id,"obj_vendor":obj_vendor,
+                                         "obj_vendor_id":obj_vendor_id,"obj_bi_id":obj_bi_id})
+                    dict_result.append(dict)
+                except Exception as err:
+                    logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
+
             return dict_result
 
 
 def executer_run():
     dev_exec = CONNECT_DEVICE(my_inventory)
     for m in my_inventory:
-        obj_vendor = m['obj_vendor']
-        if obj_vendor == "Juniper Networks":
-            my_list = dev_exec.comm_Juniper()
-            ch = CH(my_list)
-            result = ch.ch_insert()
-        if obj_vendor == "Huawei Technologies Co.":
-            my_list = ''
+        try:
+            obj_vendor = m['obj_vendor']
+            if obj_vendor == "Juniper Networks":
+                my_list = dev_exec.comm_Juniper()
+                ch = CH(my_list)
+                result = ch.ch_insert()
+            if obj_vendor == "Huawei Technologies Co.":
+                my_list = ''
+        except Exception as err:
+            logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
 
 
 int = INVENTORY(profile_list)
 schedule.every(5).minutes.do(executer_run)
-schedule.every(24).hours.do(int.start_job_inventory)
+schedule.every(2).hours.do(int.start_job_inventory)
 
 while i == 0:
     my_inventory = int.start_job_inventory(profile_list)
     time.sleep(1)
     i = i+1
 while i == 1:
-    schedule.run_pending()
-    time.sleep(1)
+    try:
+
+        schedule.run_pending()
+        time.sleep(1)
+    except Exception as err:
+        logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')

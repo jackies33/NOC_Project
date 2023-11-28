@@ -2,7 +2,8 @@
 import schedule
 import time
 from db_exec import PSQL_CONN,MONGO,CH
-
+import logging
+import datetime
 
 ''' 
 for daemon setup script
@@ -49,7 +50,7 @@ There you'll need to choose only for check stack status profiles
 """
 
 n = None
-segments_list = ['p/pe','core','dsw'] # this list for include specific "network segment" from noc to listen in this app
+segments_list = ['p/pe','core','m-dsw'] # this list for include specific "network segment" from noc to listen in this app
 my_inventory = [] # zero inventory for starting this app
 #'i' - for correct job scheduler. It's need when you start the service , 'my_inventory' is empty yet, and it's nesseccery to fill it
 #'i' - use here like starting point
@@ -116,14 +117,17 @@ def calculate_alarm(alarm_list, target_list):
 
 
 def executer_run():
-    for item in my_inventory:
-       item['obj_result'] = 3
-    mongodb = MONGO()
-    alarm_list = mongodb.get_alarm()
-    new_list = calculate_alarm(alarm_list,my_inventory)
-    ch = CH(new_list)
-    result = ch.ch_insert()
+    try:
 
+        for item in my_inventory:
+           item['obj_result'] = 3
+        mongodb = MONGO()
+        alarm_list = mongodb.get_alarm()
+        new_list = calculate_alarm(alarm_list,my_inventory)
+        ch = CH(new_list)
+        result = ch.ch_insert()
+    except Exception as err:
+        logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
 
 
 int = INVENTORY(segments_list)
@@ -135,6 +139,9 @@ while i == 0:
     time.sleep(1)
     i = i+1
 while i == 1:
-    schedule.run_pending()
-    time.sleep(1)
+    try:
+        schedule.run_pending()
+        time.sleep(1)
+    except Exception as err:
+        logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
 

@@ -1,86 +1,15 @@
 {
-  "title": "Environment | Stack",
-  "aliasColors": {},
-  "bars": false,
-  "datasource": null,
-  "fill": 1,
-  "grid": {
-    "threshold1": null,
-    "threshold1Color": "rgba(216, 200, 27, 0.27)",
-    "threshold2": null,
-    "threshold2Color": "rgba(234, 112, 112, 0.22)"
-  },
-  "id": 1151604870714532,
-  "legend": {
-    "alignAsTable": true,
-    "avg": true,
-    "current": true,
-    "max": true,
-    "min": true,
-    "show": true,
-    "sortDesc": true,
-    "total": false,
-    "values": true
-  },
-  "lines": true,
-  "linewidth": 2,
-  "links": [],
-  "nullPointMode": "connected",
-  "percentage": false,
-  "pointradius": 5,
-  "points": false,
-  "renderer": "flot",
-  "scopedVars": {
-    "{{member_name}}": {
-      "selected": true,
-      "text": "{{member_name}}"
-   {
   "id": 1151604870714532,
   "gridPos": {
     "x": 0,
     "y": 19,
-    "w": 8,
+    "w": 12,
     "h": 7
   },
   "type": "timeseries",
   "title": "Environment | Stack",
+  "pluginVersion": "8.4.6",
   "links": [],
-  "legend": {
-    "alignAsTable": true,
-    "avg": true,
-    "current": true,
-    "max": true,
-    "min": true,
-    "show": true,
-    "sortDesc": true,
-    "total": false,
-    "values": true
-  },
-  "aliasColors": {},
-  "bars": false,
-  "fill": 1,
-  "grid": {
-    "threshold1": null,
-    "threshold1Color": "rgba(216, 200, 27, 0.27)",
-    "threshold2": null,
-    "threshold2Color": "rgba(234, 112, 112, 0.22)"
-  },
-  "lines": true,
-  "linewidth": 2,
-  "nullPointMode": "connected",
-  "percentage": false,
-  "pointradius": 5,
-  "points": false,
-  "renderer": "flot",
-  "seriesOverrides": [
-    {
-      "alias": "State",
-      "yaxis": 2,
-      "fill": 0
-    }
-  ],
-  "stack": false,
-  "steppedLine": false,
   "targets": [
     {
       "resultFormat": "time_series",
@@ -93,53 +22,23 @@
       "dateLoading": false,
       "datetimeLoading": false,
       "dateColDataType": "date",
-      "dateTimeColDataType": "ts"
+      "dateTimeColDataType": "ts",
+      "datasource": {
+        "type": "vertamedia-clickhouse-datasource",
+        "uid": "PAC5427CE0D9D09D1"
+      },
+      "format": "time_series",
+      "extrapolate": true,
+      "skip_comments": true,
+      "dateTimeType": "DATETIME",
+      "round": "0s",
+      "formattedQuery": "SELECT \n    t, \n    groupArray((member_name, Status)) AS groupArr \nFROM (\n    SELECT $timeSeries as t, \n        member_name, \n        avg(status) as `Status` \n    FROM \n        $table \n    WHERE \n        managed_object=$bi_id \n        and $timeFilter\n    GROUP BY member_name, t ORDER BY t) \nGROUP BY t \nORDER BY t",
+      "rawQuery": "SELECT \n    t, \n    groupArray((member_name, Status)) AS groupArr \nFROM (\n    SELECT (intDiv(toUInt32(ts), 20) * 20) * 1000 as t, \n        member_name, \n        min(status) as `Status` \n    FROM \n        noc.stack \n    WHERE \n        managed_object=1926171014946576163 \n        and date >= toDate(1700624007) AND date <= toDate(1700645607) AND ts >= toDateTime(1700624007) AND ts <= toDateTime(1700645607)\n    GROUP BY member_name, t ORDER BY t) \nGROUP BY t \nORDER BY t"
     }
   ],
   "timeFrom": null,
   "timeShift": null,
-  "tooltip": {
-    "msResolution": false,
-    "shared": true,
-    "sort": 0,
-    "value_type": "cumulative"
-  },
-  "x-axis": true,
-  "xaxis": {
-    "show": true
-  },
-  "y-axis": true,
-  "yaxes": [
-    {
-      "format": "",
-      "label": null,
-      "logBase": 1,
-      "max": 2,
-      "min": 0,
-      "show": true
-    },
-    {
-      "format": "short",
-      "label": null,
-      "logBase": 1,
-      "max": null,
-      "min": null,
-      "show": true
-    }
-  ],
-  "options": {
-    "tooltip": {
-      "mode": "single",
-      "sort": "desc"
-    },
-    "legend": {
-      "displayMode": "table",
-      "placement": "bottom",
-      "calcs": [
-        "last"
-      ]
-    }
-  },
+  "transparent": true,
   "fieldConfig": {
     "defaults": {
       "custom": {
@@ -147,13 +46,13 @@
         "lineInterpolation": "linear",
         "barAlignment": 0,
         "lineWidth": 2,
-        "fillOpacity": 13,
+        "fillOpacity": 10,
         "gradientMode": "hue",
         "spanNulls": false,
         "showPoints": "auto",
-        "pointSize": 4,
+        "pointSize": 8,
         "stacking": {
-          "mode": "normal",
+          "mode": "percent",
           "group": "A"
         },
         "axisPlacement": "auto",
@@ -172,7 +71,7 @@
         "lineStyle": {
           "fill": "solid"
         },
-        "axisWidth": 5
+        "axisGridShow": true
       },
       "color": {
         "mode": "palette-classic"
@@ -182,7 +81,7 @@
           "type": "value",
           "options": {
             "0": {
-              "text": "FAILED",
+              "text": "Failed",
               "color": "semi-dark-red",
               "index": 1
             },
@@ -204,11 +103,24 @@
         ]
       },
       "unit": "string",
-      "min": -1
+      "min": 0,
+      "max": 2
     },
     "overrides": []
   },
-  "transparent": true,
   "repeat": null,
+  "options": {
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    },
+    "legend": {
+      "displayMode": "table",
+      "placement": "bottom",
+      "calcs": [
+        "lastNotNull"
+      ]
+    }
+  },
   "datasource": null
 }

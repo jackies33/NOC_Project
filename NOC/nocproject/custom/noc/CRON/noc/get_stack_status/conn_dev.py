@@ -6,6 +6,8 @@ from my_pass import mylogin,mypass
 from itertools import repeat
 import logging
 from netmiko import ConnectHandler, NetMikoAuthenticationException
+from paramiko import SSHException
+import datetime
 import re
 
 class CONNECT_DEVICE():
@@ -50,39 +52,61 @@ class CONNECT_DEVICE():
                 result = ssh.send_command(command)
                 ssh.disconnect()
             return result
+
         except NetMikoAuthenticationException as err:
-            logging.warning(err)
+            logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
+        except SSHException as err:
+            logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
 
 
     def comm_Juniper(self,*args):
         data = []
         command = "show virtual-chassis"
+
         with ThreadPoolExecutor(max_workers=5) as executor:
             result = executor.map(self.send_show, self.devices, repeat(command))
             for  device , output in zip(self.devices,result):
-                find = re.findall(r'\(FPC \d+\)  (?:Prsnt|Mismatch)    \S+', output)
-                data2 = []
-                data3 = []
-                data4 = []
-                for target in find:
-                    memb = re.findall(r"\(FPC \d+\)", target)[0]
-                    member = int(re.findall(r"\d+", memb)[0])
-                    if "Mismatch" in target:
-                        sn = target.split("Mismatch    ")[1]
-                        data3.append({f"Member_id:{member},S/N:{sn}":0})
-                    elif "Prsnt" in target:
-                        sn = target.split("Prsnt    ")[1]
-                        data3.append({f"Member_id:{member},S/N:{sn}":1})
-                data4.extend(data3)
-                data5 = ({"obj_id":device["obj_id"],
-                          "obj_ip":device["obj_ip"],
-                          "obj_name":device["obj_name"],
-                             "obj_prof_id":device["obj_prof_id"],
-                          "obj_vendor":device["obj_vendor"],
-                          "obj_vendor_id":device["obj_vendor_id"],
-                          "obj_bi_id":device["obj_bi_id"],
-                          "obj_target":data4})
-                data2.append(data5)
-                data.extend(data2)
+                try:
+                        if output != '' or [] or None:
+                                find = re.findall(r'\(FPC \d+\)  (?:Prsnt|Mismatch)    \S+', output)
+                                data2 = []
+                                data3 = []
+                                data4 = []
+                                for target in find:
+                                    memb = re.findall(r"\(FPC \d+\)", target)[0]
+                                    member = int(re.findall(r"\d+", memb)[0])
+                                    if "Mismatch" in target:
+                                        sn = target.split("Mismatch    ")[1]
+                                        data3.append({f"Member_id:{member},S/N:{sn}":0})
+                                    elif "Prsnt" in target:
+                                        sn = target.split("Prsnt    ")[1]
+                                        data3.append({f"Member_id:{member},S/N:{sn}":1})
+                                data4.extend(data3)
+                                data5 = ({"obj_id":device["obj_id"],
+                                          "obj_ip":device["obj_ip"],
+                                          "obj_name":device["obj_name"],
+                                             "obj_prof_id":device["obj_prof_id"],
+                                          "obj_vendor":device["obj_vendor"],
+                                          "obj_vendor_id":device["obj_vendor_id"],
+                                          "obj_bi_id":device["obj_bi_id"],
+                                          "obj_target":data4})
+                                data2.append(data5)
+                                data.extend(data2)
+
+                        if output == '' or [] or None:
+                            data2 = []
+                            data5 = ({"obj_id": device["obj_id"],
+                                      "obj_ip": device["obj_ip"],
+                                      "obj_name": device["obj_name"],
+                                      "obj_prof_id": device["obj_prof_id"],
+                                      "obj_vendor": device["obj_vendor"],
+                                      "obj_vendor_id": device["obj_vendor_id"],
+                                      "obj_bi_id": device["obj_bi_id"],
+                                      "obj_target": {"None"}})
+                            data2.append(data5)
+                            data.extend(data2)
+                except TypeError as err:
+                    logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
+
         return data
 

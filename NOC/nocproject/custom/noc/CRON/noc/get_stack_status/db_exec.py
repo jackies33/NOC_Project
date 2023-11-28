@@ -98,28 +98,39 @@ class CH():
         )
 
     def ch_insert(self,*args):
-         cursor1 = self.connection1.cursor()
-         cursor2 = self.connection2.cursor()
-         tz = timezone('Europe/Moscow')
-         date = datetime.now(tz).strftime('%Y-%m-%d')
-         timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
-         query = "INSERT INTO stack (date, ts, metric_type, managed_object, member_name, member_id, status) VALUES "
-         for data in self.mylist:
-             member = data["obj_target"]
-             managed_object = data["obj_bi_id"]
-             for mem in member:
-                 member = mem.keys()
-                 stat = mem.values()
-                 for m, s in zip(member, stat):
-                     member_name = m
-                     member_id = int(re.findall(r"Member_id:\d+", member_name)[0].split("Member_id:")[1])
-                     status = int(s)
-                     query += "".join(f"('{date}','{timenow}','',{managed_object}, '{member_name}', '{member_id}', {status}),")
-         query = query.rstrip(",")
-         query = (f"{query};")
-         cursor1.execute(query)
-         results1 = cursor1.fetchall()
-         cursor2.execute(query)
-         results2 = cursor2.fetchall()
-         self.connection1.close()
-         self.connection2.close()
+        try:
+                 cursor1 = self.connection1.cursor()
+                 cursor2 = self.connection2.cursor()
+                 tz = timezone('Europe/Moscow')
+                 date = datetime.now(tz).strftime('%Y-%m-%d')
+                 timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
+                 query = "INSERT INTO stack (date, ts, metric_type, managed_object, member_name, member_id, status) VALUES "
+                 for data in self.mylist:
+                     member = data["obj_target"]
+                     managed_object = data["obj_bi_id"]
+                     for mem in member:
+                         member = mem.keys()
+                         stat = mem.values()
+                         for m, s in zip(member, stat):
+                             member_name = m
+                             member_id = int(re.findall(r"Member_id:\d+", member_name)[0].split("Member_id:")[1])
+                             status = int(s)
+                             query += "".join(f"('{date}','{timenow}','',{managed_object}, '{member_name}', '{member_id}', {status}),")
+                 query = query.rstrip(",")
+                 query = (f"{query};")
+                 cursor1.execute(query)
+                 results1 = cursor1.fetchall()
+                 cursor2.execute(query)
+                 results2 = cursor2.fetchall()
+                 self.connection1.close()
+                 self.connection2.close()
+
+        except clickhouse_driver.dbapi.errors.OperationalError as e:
+            print(f"OperationalError: {e}")
+        except clickhouse_driver.errors.NetworkError as e:
+            print(f"NetworkError: {e}")
+        except clickhouse_driver.errors.SocketTimeoutError as e:
+            print(f"SocketTimeoutError: {e}")
+        except Exception as e:
+            print(f"Exception: {e}")
+
