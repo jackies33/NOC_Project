@@ -3,8 +3,7 @@ import schedule
 import time
 from db_exec import PSQL_CONN,MONGO,CH
 from conn_dev import CONNECT_DEVICE
-import logging
-import datetime
+
 
 ''' 
 for daemon setup script
@@ -62,7 +61,6 @@ class INVENTORY():
 
 
     def start_job_inventory(self,*args):
-        try:
             psql = PSQL_CONN(n, self.id_list)
             id_list = psql.get_id()
             id1 = ''
@@ -79,13 +77,11 @@ class INVENTORY():
             global my_inventory
             my_inventory = (self.collect_inv(process, obj_vendor))
             return my_inventory
-        except Exception as err:
-            logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
 
     def collect_inv(self,inventory,vendor_dict):
             dict_result = []
             for r in inventory:
-                try:
+
                     dict = {}
                     obj_id = r[0]
                     obj_name = r[1]
@@ -100,8 +96,6 @@ class INVENTORY():
                                          "obj_prof_id":obj_prof_id,"obj_vendor":obj_vendor,
                                          "obj_vendor_id":obj_vendor_id,"obj_bi_id":obj_bi_id})
                     dict_result.append(dict)
-                except Exception as err:
-                    logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
 
             return dict_result
 
@@ -109,7 +103,6 @@ class INVENTORY():
 def executer_run():
     dev_exec = CONNECT_DEVICE(my_inventory)
     for m in my_inventory:
-        try:
             obj_vendor = m['obj_vendor']
             if obj_vendor == "Juniper Networks":
                 my_list = dev_exec.comm_Juniper()
@@ -117,8 +110,6 @@ def executer_run():
                 result = ch.ch_insert()
             if obj_vendor == "Huawei Technologies Co.":
                 my_list = ''
-        except Exception as err:
-            logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
 
 
 int = INVENTORY(profile_list)
@@ -130,9 +121,6 @@ while i == 0:
     time.sleep(1)
     i = i+1
 while i == 1:
-    try:
-
         schedule.run_pending()
-        time.sleep(1)
-    except Exception as err:
-        logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
+        time.sleep(10)
+
