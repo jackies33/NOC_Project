@@ -45,7 +45,7 @@ ______________________________
 
 
 def run_playbook():
-    cmd = "ansible-playbook /opt/ansible/lbreset/playbook.yml"
+    cmd = "ansible-playbook /opt/ansible/lbreset/runner.yml"
     logging.basicConfig(filename='/var/log/ansible/lbreset/output.log', level=logging.DEBUG)
     tz = timezone('Europe/Moscow')
     timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')

@@ -12,6 +12,7 @@ import time
 import paramiko
 from paramiko import SSHException
 from airwaveapiclient import AirWaveAPIClient
+import datetime
 
 
 login = mylogin
@@ -163,6 +164,51 @@ class CONNECT_HANDLER():
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
                except Exception as e:
                    print(f"Error {e}")
+
+        def conn_FortiGate(self, *args):
+
+            primary_ip = (f'{self.ip_conn}/{self.mask}')
+            cmnd1 = '\n config global \n\n      '  # Commands
+            cmnd2 = '\n get system status  \n\n           '  # Commands
+            cmnd3 = '\n get system interface physical  \n\n        '  # Commands
+            cmnd4 = '         \n\n           '
+            ssh = paramiko.SSHClient()
+            ssh.load_system_host_keys()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.ip_conn,
+                        username=login,
+                        password=password,
+                        look_for_keys=False)
+            ssh1 = ssh.invoke_shell()
+            try:
+                time.sleep(1)
+                ssh1.send(cmnd1)
+                time.sleep(1)
+                ssh1.send(cmnd2)
+                time.sleep(1)
+                ssh1.send(cmnd3)
+                time.sleep(1)
+                ssh1.send(cmnd4)
+                time.sleep(1)
+                output1 = (ssh1.recv(9999999).decode("utf-8"))
+                time.sleep(1)
+                device_name = re.findall(f"Hostname: \S+", output1)[0].split("Hostname: ")[1]
+                interface_name = re.findall(f"==.+\n.+\n\s+ip: {self.ip_conn}", output1)[0]
+                interface_name = re.findall(f"==\[\S+\]", interface_name)[0].split("==[")[1].rsplit(']')[0]
+                device_type = re.findall(f"Version: \S+", output1)[0].split("Version: ")[1]
+                device_type = classifier_device_type(device_type)
+                manufacturer = 'Fortinet'
+                ssh1.close()
+                adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
+                                manufacturer,
+                                self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
+                                self.management)
+                result = adding.add_device()
+                return result
+            except Exception as err:
+                print(f'\n\n{datetime.datetime.now()}\n\n{err}')
+
+
 
         def conn_IBM_lenovo_sw(self,*args):
             primary_ip = (f'{self.ip_conn}/{self.mask}')

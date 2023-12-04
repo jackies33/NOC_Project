@@ -53,6 +53,9 @@ class CONNECT_DEVICE():
                     if platform[1] == "Aruba.ArubaOS":
                         connection = CONNECT_HANDLER(ip_conn, mask, platform, site_name, self.location,self.device_role, self.tenants, conn_scheme, self.management)
                         result = connection.conn_AWMP()
+                    if platform[1] == "Fortinet.Fortigate":
+                        connection = CONNECT_HANDLER(ip_conn, mask, platform, site_name, self.location,self.device_role, self.tenants, conn_scheme, self.management)
+                        result = connection.conn_FortiGate()
                     return result
 
 
