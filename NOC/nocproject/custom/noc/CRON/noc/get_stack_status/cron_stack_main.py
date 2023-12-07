@@ -79,7 +79,11 @@ class INVENTORY():
             return my_inventory
 
     def collect_inv(self,inventory,vendor_dict):
-            dict_result = []
+            general_dict = {}
+            jun_list_result = []
+            hua_list_result = []
+            #cisco_list_result = []
+
             for r in inventory:
 
                     dict = {}
@@ -95,22 +99,34 @@ class INVENTORY():
                             dict.update({"obj_id":obj_id,"obj_name":obj_name,"obj_ip":obj_ip,
                                          "obj_prof_id":obj_prof_id,"obj_vendor":obj_vendor,
                                          "obj_vendor_id":obj_vendor_id,"obj_bi_id":obj_bi_id})
-                    dict_result.append(dict)
-
-            return dict_result
+                            if obj_vendor == "Juniper Networks":
+                                jun_list_result.append(dict)
+                            if obj_vendor == "Huawei Technologies Co.":
+                                hua_list_result.append(dict)
+                    general_dict.update({"juniper": jun_list_result})
+                    general_dict.update({"huawei": hua_list_result})
+            return general_dict
 
 
 def executer_run():
-    dev_exec = CONNECT_DEVICE(my_inventory)
-    for m in my_inventory:
-            obj_vendor = m['obj_vendor']
-            if obj_vendor == "Juniper Networks":
-                my_list = dev_exec.comm_Juniper()
-                ch = CH(my_list)
-                result = ch.ch_insert()
-            if obj_vendor == "Huawei Technologies Co.":
-                my_list = ''
-
+    juniper_list = my_inventory['juniper']
+    #huawei_list = my_inventory['huawei']
+    if juniper_list != []:
+        dev_exec = CONNECT_DEVICE(juniper_list)
+        my_list = dev_exec.comm_Juniper()
+        ch = CH(my_list)
+        ch.ch_insert()
+    else:
+        pass
+    """
+    if huawei_list != []:
+        dev_exec = CONNECT_DEVICE(huawei_list)
+        my_list = dev_exec.comm_Huawei()
+        ch = CH(my_list)
+        ch.ch_insert()
+    else:
+        pass
+    """
 
 int = INVENTORY(profile_list)
 schedule.every(5).minutes.do(executer_run)
@@ -123,4 +139,3 @@ while i == 0:
 while i == 1:
         schedule.run_pending()
         time.sleep(10)
-

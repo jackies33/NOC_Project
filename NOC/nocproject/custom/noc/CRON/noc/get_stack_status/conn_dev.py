@@ -54,16 +54,18 @@ class CONNECT_DEVICE():
             return result
 
         except NetMikoAuthenticationException as err:
-            logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
+            logging.warning(f'________\n\n\n{datetime.datetime.now()}   ----   {err}\n\n\n_________')
         except SSHException as err:
-            logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
+            logging.warning(f'________\n\n\n{datetime.datetime.now()}   ----   {err}\n\n\n_________')
+        except Exception as err:
+            logging.warning(f'________\n\n\n{datetime.datetime.now()}   ----   {err}\n\n\n_________')
 
 
     def comm_Juniper(self,*args):
         data = []
         command = "show virtual-chassis"
 
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=30) as executor:
             result = executor.map(self.send_show, self.devices, repeat(command))
             for  device , output in zip(self.devices,result):
                 try:
@@ -102,11 +104,14 @@ class CONNECT_DEVICE():
                                       "obj_vendor": device["obj_vendor"],
                                       "obj_vendor_id": device["obj_vendor_id"],
                                       "obj_bi_id": device["obj_bi_id"],
-                                      "obj_target": {"None"}})
+                                      "obj_target": "None"})
                             data2.append(data5)
                             data.extend(data2)
                 except TypeError as err:
-                    logging.warning(f'\n\n{datetime.datetime.now()}\n\n{err}')
+                    logging.warning(f'________\n\n\n{datetime.datetime.now()}   ----   {err}\n\n\n_________')
+                except Exception as err:
+                    logging.warning(f'________\n\n\n{datetime.datetime.now()}   ----   {err}\n\n\n_________')
 
         return data
+
 
