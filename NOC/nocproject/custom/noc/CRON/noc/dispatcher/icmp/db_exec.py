@@ -17,7 +17,7 @@ class PSQL_CONN():
                         self.list1=list1
                         self.list2 = list2
                         self.conn = psycopg2.connect(
-                            host="10.50.50.170",
+                            host="10.50.74.171",
                             database="noc",
                             user=user_noc,
                             password=pass_noc,
@@ -46,11 +46,11 @@ class MONGO():
           self.id_list2=id_list2
 
       def get_alarm(self):
-          client = MongoClient(f'mongodb://noc:{user_noc}@kr01-mongodb01:27017/{pass_noc}')
+          client = MongoClient(f'mongodb://noc:{user_noc}@kr01-main-noc:27017/{pass_noc}')
           db = client['noc']
           collection = db['noc.alarms.active']
           find = collection.find()
-          fault_alarm_class = "64c8db8f498777ecdeb4c2b1"
+          fault_alarm_class = "6581576d97e47894dd6a890f"
           input_list = []
           if find != []:
               for dict in find:
@@ -75,7 +75,7 @@ class MONGO():
 
       def get_segment_id(self, *args):
           name = ''
-          client = MongoClient(f'mongodb://noc:{user_noc}@kr01-mongodb01:27017/{pass_noc}')
+          client = MongoClient(f'mongodb://noc:{user_noc}@kr01-main-noc:27017/{pass_noc}')
           db = client['noc']
           collection = db['noc.networksegments']
           result = []
@@ -96,25 +96,18 @@ class CH():
         self.mylist_insert = mylist_insert
 
         self.connection1 = clickhouse_driver.connect(
-            host='10.50.50.173',
+            host='10.50.74.171',
             port=9000,
             user=user_noc,
             password=pass_noc,
             database='noc'
         )
-        self.connection2 = clickhouse_driver.connect(
-            host='10.50.50.174',
-            port=9000,
-            user=user_noc,
-            password=pass_noc,
-            database='noc'
-        )
+
 
 
     def ch_insert(self, *args):
         try:
                 cursor1 = self.connection1.cursor()
-                cursor2 = self.connection2.cursor()
                 tz = timezone('Europe/Moscow')
                 date = datetime.now(tz).strftime('%Y-%m-%d')
                 timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
@@ -130,11 +123,9 @@ class CH():
                 query = (f"{query};")
                 cursor1.execute(query)
                 results1 = cursor1.fetchall()
-                cursor2.execute(query)
-                results2 = cursor2.fetchall()
                 self.connection1.close()
-                self.connection2.close()
-                return  results1,results2
+
+                return  results1
 
         except clickhouse_driver.dbapi.errors.OperationalError as e:
             print(f"OperationalError: {e}")

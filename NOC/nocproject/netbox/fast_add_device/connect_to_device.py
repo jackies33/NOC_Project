@@ -1,9 +1,8 @@
 
 
-
-from .psql_conn import postgresql_connections
 from .connect_handler_dif import CONNECT_HANDLER
-
+import pynetbox
+from .my_pass import netbox_url,netbox_api_token
 
 class CONNECT_DEVICE():
 
@@ -12,7 +11,7 @@ class CONNECT_DEVICE():
         """
 
         def __init__(self, ip_address,platform,device_type,
-                     device_role,tenants,location,management):
+                     device_role,tenants,location,management,racks):
 
             self.ip_address = ip_address
             self.platform = platform
@@ -21,6 +20,7 @@ class CONNECT_DEVICE():
             self.tenants = tenants
             self.location = location
             self.management = management
+            self.racks = racks
 
         def prepare_for_connection(self, *args):
                     ip_conn = self.ip_address.split('/')[0]
@@ -33,28 +33,35 @@ class CONNECT_DEVICE():
                         print('Are you sure that use telnet!?')
                     if conn_scheme == 'ssh':
                         print("ssh is ok")
-                    psql = postgresql_connections(self.location,self.platform)
-                    platform = psql.postgre_conn_platform()[0]
-                    #choices_management = [(1,'Active'),(2,'Offline')]
-                    site_name = psql.postgre_conn_site()
+
+                    nb = pynetbox.api(url=netbox_url, token=netbox_api_token)
+                    nb.http_session.verify = False
+                    platform_main = nb.dcim.platforms.get(id=self.platform)
+                    platform = str(platform_main)
+                    platform_id = int(platform_main.id)
+                    location_main = nb.dcim.locations.get(id=self.location)
+                    site_name = int(location_main.site.id)
                     result = []
-                    if platform[1] == "Huawei.VRP":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management)
+                    if platform == "Huawei.VRP":
+                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management,self.racks)
                          result = connection.conn_Huawei()
-                    if platform[1] == "Juniper.JUNOS":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management)
+                    if platform == "Juniper.JUNOS":
+                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management,self.racks)
                          result = connection.conn_Juniper_rpc()
-                    if platform[1] == "IBM.NOS":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management)
+                    if platform == "Cisco.IOS":
+                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management,self.racks)
+                         result = connection.conn_Cisco_IOS()
+                    if platform == "IBM.NOS":
+                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management,self.racks)
                          result = connection.conn_IBM_lenovo_sw()
-                    if platform[1] == "Cisco.NXOS":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management)
+                    if platform == "Cisco.NXOS":
+                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,site_name,self.location,self.device_role,self.tenants,conn_scheme,self.management,self.racks)
                          result = connection.conn_Cisco_NXOS()
-                    if platform[1] == "Aruba.ArubaOS":
-                        connection = CONNECT_HANDLER(ip_conn, mask, platform, site_name, self.location,self.device_role, self.tenants, conn_scheme, self.management)
+                    if platform == "Aruba.ArubaOS":
+                        connection = CONNECT_HANDLER(ip_conn, mask, platform_id, site_name, self.location,self.device_role, self.tenants, conn_scheme, self.management,self.racks)
                         result = connection.conn_AWMP()
-                    if platform[1] == "Fortinet.Fortigate":
-                        connection = CONNECT_HANDLER(ip_conn, mask, platform, site_name, self.location,self.device_role, self.tenants, conn_scheme, self.management)
+                    if platform == "Fortinet.Fortigate":
+                        connection = CONNECT_HANDLER(ip_conn, mask, platform_id, site_name, self.location,self.device_role, self.tenants, conn_scheme, self.management,self.racks)
                         result = connection.conn_FortiGate()
                     return result
 

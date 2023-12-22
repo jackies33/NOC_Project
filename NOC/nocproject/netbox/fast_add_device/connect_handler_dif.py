@@ -1,4 +1,6 @@
 
+
+
 import socket
 from .add_device import ADD_NB
 from .classifier import classifier_device_type
@@ -25,7 +27,8 @@ class CONNECT_HANDLER():
         """
 
         def __init__(self, ip_conn = None,mask = None,platform = None,site_name = None,
-                     location = None,device_role = None,tenants = None,conn_scheme = None,management = None):
+                     location = None,device_role = None,tenants = None,conn_scheme = None,management = None,
+                     racks = None):
 
             self.ip_conn = ip_conn
             self.mask = mask
@@ -36,6 +39,7 @@ class CONNECT_HANDLER():
             self.tenants = tenants
             self.conn_scheme = conn_scheme
             self.management = management
+            self.racks = racks
 
 
         def check_ssh(self,ip_conn):
@@ -76,7 +80,6 @@ class CONNECT_HANDLER():
 
                         with ConnectHandler(**host1) as net_connect:
                                 primary_ip = (f'{self.ip_conn}/{self.mask}')
-
                                 output_name_result = net_connect.send_command('display current-configuration | include sysname',
                                                                               delay_factor=.5)  # command result
                                 device_name = re.findall(r"sysname \S+", output_name_result)[0].split('sysname ')[1]
@@ -87,13 +90,13 @@ class CONNECT_HANDLER():
                                 escaped_ip_address = re.escape(self.ip_conn)
                                 re_ip = (f"(\S+)\s+{escaped_ip_address}")
                                 interface_name = re.findall(re_ip, output_ip)[0]
-                                device_type = classifier_device_type(re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q'
-                                                                                r'|S5700-28C-EI-24S|S5735-S48S4X', output_version)[0])
+                                manufacturer = 'Huawei Technologies Co.'
+                                device_type = classifier_device_type(manufacturer,re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q'
+                                                                                r'|S5700-28C-EI-24S|S5735-S48S4X|CE8851-32CQ8DQ-P', output_version))
                                 # print(device_name,device_type,interface_name)
                                 net_connect.disconnect()
-                                manufacturer = 'huawei-technologies-co'
                                 adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
-                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management)
+                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
                                 result = adding.add_device()
                                 return result
 
@@ -152,15 +155,39 @@ class CONNECT_HANDLER():
                                             break
 
                                 dev.close()
-                                device_type = classifier_device_type(device_type)
+                                manufacturer = 'Juniper Networks'
+                                device_type = classifier_device_type(manufacturer,device_type)
                                 #print('this is connect_to_device_juniper_out!!!!')
-                                manufacturer = 'juniper-networks'
                                 adding = ADD_NB(device_name, self.site_name, self.location , self.tenants, self.device_role, manufacturer,
-                                           self.platform , device_type, primary_ip, interface_name,self.conn_scheme,self.management)
+                                           self.platform , device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
                                 result = adding.add_device()
                                 return result
 
                except (ConnectAuthError, ConnectClosedError,ConnectError,ConnectTimeoutError):  # exceptions
+                    print('\n\n not connect to ' + self.ip_conn + '\n\n')
+               except Exception as e:
+                   print(f"Error {e}")
+
+
+
+        def conn_Cisco_IOS(self,*args):
+               type_device_for_conn = "cisco_ios"
+               host1 = self.template_conn(self.ip_conn, type_device_for_conn)
+               try:
+                        with ConnectHandler(**host1) as net_connect:
+                                primary_ip = (f'{self.ip_conn}/{self.mask}')
+                                output_main = net_connect.send_command('show version', delay_factor=.5)
+                                device_name = re.findall(f"\S+ uptime is", output_main)[0].split("uptime is")[0].strip()
+                                manufacturer = 'Cisco Systems'
+                                device_type = classifier_device_type(manufacturer,re.findall(f"cisco \S+", output_main)[0].split("cisco")[1].strip())
+                                output_interface_name = net_connect.send_command(f'show ip interface brief | include {self.ip_conn}', delay_factor=.5)
+                                interface_name = re.findall(f"^\S+\s+{self.ip_conn}", output_interface_name, re.MULTILINE)[0].split(self.ip_conn)[0].strip()
+                                adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
+                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
+                                result = adding.add_device()
+                                return result
+
+               except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
                except Exception as e:
                    print(f"Error {e}")
@@ -196,13 +223,13 @@ class CONNECT_HANDLER():
                 interface_name = re.findall(f"==.+\n.+\n\s+ip: {self.ip_conn}", output1)[0]
                 interface_name = re.findall(f"==\[\S+\]", interface_name)[0].split("==[")[1].rsplit(']')[0]
                 device_type = re.findall(f"Version: \S+", output1)[0].split("Version: ")[1]
-                device_type = classifier_device_type(device_type)
                 manufacturer = 'Fortinet'
+                device_type = classifier_device_type(manufacturer,device_type)
                 ssh1.close()
                 adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
                                 manufacturer,
                                 self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
-                                self.management)
+                                self.management, self.racks)
                 result = adding.add_device()
                 return result
             except Exception as err:
@@ -234,11 +261,11 @@ class CONNECT_HANDLER():
                         ssh1.close()
                         preresult1 = re.findall(r'sysName:     \S+', output_name_result)[0].split('sysName:     ')[1]
                         device_name = preresult1.split('"')[1]
-                        device_type = classifier_device_type(re.findall(r'Flex System Fabric EN4093R 10Gb Scalable Switch', output_name_result)[0])
-                        interface_name = 'EXTM'
                         manufacturer = 'LENOVO'
+                        device_type = classifier_device_type(manufacturer,re.findall(r'Flex System Fabric EN4093R 10Gb Scalable Switch', output_name_result))
+                        interface_name = 'EXTM'
                         adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
-                                                   self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management)
+                                                   self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
                         result = adding.add_device()
                         return result
             except IndexError as e:
@@ -258,11 +285,11 @@ class CONNECT_HANDLER():
                                 device_name = re.findall(r'\S+', output1)[0]
                                 output2 = net_connect.send_command('show version',delay_factor=.5)  # command result
                                 output_name_result = re.findall(r'Hardware\n.+', output2)[0]
-                                device_type = classifier_device_type(re.findall(r'Nexus7700 C7702', output_name_result)[0])
-                                interface_name = 'mgmt0'
                                 manufacturer = 'Cisco Systems'
+                                device_type = classifier_device_type(manufacturer,re.findall(r'cisco Nexus7700 C7702|cisco Nexus 6001', output_name_result)[0].split("cisco")[1].strip())
+                                interface_name = 'mgmt0'
                                 adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
-                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management)
+                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
                                 result = adding.add_device()
                                 return result
 
@@ -277,15 +304,15 @@ class CONNECT_HANDLER():
                try:
                    airwave.login()
                    output = airwave.amp_stats().text
-                   device_type = classifier_device_type(re.findall("<name>.*</name>", output)[0].split('<name>')[1].split('</name>')[0])
+                   manufacturer = "Hewlett Packard Enterprise"
+                   device_type = classifier_device_type(manufacturer,re.findall("<name>.*</name>", output)[0].split('<name>')[1].split('</name>'))
                    primary_ip = (f'{self.ip_conn}/{self.mask}')
                    interface_name = "VirtInt"
-                   manufacturer = "Hewlett Packard Enterprise"
                    device_name = f'AWMP_{self.ip_conn}'
                    adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
                                    manufacturer,
                                    self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
-                                   self.management)
+                                   self.management, self.racks)
                    result = adding.add_device()
                    return result
                except Exception as e:

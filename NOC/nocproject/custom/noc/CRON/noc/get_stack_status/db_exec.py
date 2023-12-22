@@ -22,7 +22,7 @@ class PSQL_CONN():
                         self.id1=id1
                         self.list1 = list1
                         self.conn = psycopg2.connect(
-                            host="10.50.50.170",
+                            host="10.50.74.171",
                             database="noc",
                             user=user_noc,
                             password=pass_noc,
@@ -56,7 +56,7 @@ class MONGO():
           #collection = self.db[f'noc.vendors.find({"_id" : ObjectId("{self.id1}")})']
           name = ''
           try:
-              client = MongoClient(f'mongodb://noc:{user_noc}@kr01-mongodb01:27017/{pass_noc}')
+              client = MongoClient(f'mongodb://noc:{user_noc}@kr01-main-noc:27017/{pass_noc}')
               db = client['noc']
               collection = db['noc.vendors']
               post_id = f"{self.id1}"
@@ -76,7 +76,7 @@ class MONGO():
 def get_bi_id(self,*args):
           name = ''
           try:
-              client = MongoClient(f'mongodb://noc:{user_noc}@kr01-mongodb01:27017/{pass_noc}')
+              client = MongoClient(f'mongodb://noc:{user_noc}@kr01-main-noc:27017/{pass_noc}')
               db = client['noc']
               collection = db['ds_managedobject']
               id = int(self.id2)
@@ -101,14 +101,7 @@ class CH():
     def __init__(self,mylist):
         self.mylist = mylist
         self.connection1 = clickhouse_driver.connect(
-            host='10.50.50.173',
-            port=9000,
-            user=user_noc,
-            password=pass_noc,
-            database='noc'
-        )
-        self.connection2 = clickhouse_driver.connect(
-            host='10.50.50.174',
+            host='10.50.74.171',
             port=9000,
             user=user_noc,
             password=pass_noc,
@@ -119,7 +112,6 @@ class CH():
         try:
 
              cursor1 = self.connection1.cursor()
-             cursor2 = self.connection2.cursor()
              tz = timezone('Europe/Moscow')
              date = datetime.now(tz).strftime('%Y-%m-%d')
              timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
@@ -139,13 +131,9 @@ class CH():
              query = (f"{query};")
              cursor1.execute(query)
              results1 = cursor1.fetchall()
-             cursor2.execute(query)
-             results2 = cursor2.fetchall()
              #for row1,row2 in zip(results1,results2):
                   #return row1,row2
-
              self.connection1.close()
-             self.connection2.close()
         except Exception as err:
              logging.warning(f'________\n\n\n{datetime.now()}   ----   {err}\n\n\n_________')
 

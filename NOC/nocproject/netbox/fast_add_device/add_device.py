@@ -1,10 +1,13 @@
 
+
+
 import traceback
 import time
 import pynetbox
 from .tgbot import tg_bot
 import datetime
 from .my_pass import netbox_url,netbox_api_token
+
 
 class ADD_NB():
 
@@ -14,7 +17,7 @@ class ADD_NB():
 
         def __init__(self, name_device, site, location, tenants, device_role,
                      manufacturer,platform, device_type,
-                       primary_ip, interface_name,conn_scheme, management):
+                       primary_ip, interface_name,conn_scheme, management ,racks):
 
             self.status = 'active'
             self.type_of_interface = 'virtual'
@@ -31,6 +34,7 @@ class ADD_NB():
             self.interface_name = interface_name
             self.conn_scheme = conn_scheme
             self.management = management
+            self.racks = racks
 
         def add_device(self,*args):
            # print('this is add_device.py!!!!')
@@ -43,28 +47,68 @@ class ADD_NB():
             nb = pynetbox.api(url=netbox_url,
                               token=netbox_api_token)
             nb.http_session.verify = False
-            site = self.site[0]
+            """
+            print(self.name_device)
+            print(type(self.name_device))
+            print(self.management)
+            print(type(self.management))
+            print(self.device_role)
+            print(type(self.device_role))
+            print(self.primary_ip)
+            print(type(self.primary_ip))
+            print(self.tenants)
+            print(type(self.tenants))
+            print({'Connection_Scheme': str(self.conn_scheme)})
+            print(self.site)
+            print(type(self.site))
+            print(self.location)
+            print(type(self.location))
+            print(self.device_type)
+            print(type(self.device_type))
+            print(self.manufacturer)
+            print(type(self.manufacturer))
+            print(self.platform)
+            print(type(self.platform))
+            print(self.racks)
+            print(type(self.racks))
+            """
             #print(self.name_device, site, self.location, self.tenants, self.device_role,
                  # self.manufacturer, self.platform, self.device_type,
                  # self.primary_ip, self.interface_name, self.conn_scheme, self.management)
             try:
-                nb.dcim.devices.create(
-                       name=self.name_device,
-                       status = str(self.management).lower(),
-                       site=site[1],
-                       location=self.location,
-                       device_role=self.device_role,
-                       manufacturer=self.manufacturer.title(),
-                       platform=self.platform[0],
-                       device_type = self.device_type,
-                       primary_ip = self.primary_ip,
-                       tenant = self.tenants,
-                       custom_fields = {'Connection_Scheme': str(self.conn_scheme)},
-                )
+                if self.racks != None:
+                    nb.dcim.devices.create(
+                           name=self.name_device,
+                           status = str(self.management).lower(),
+                           site=self.site,
+                           location=self.location,
+                           device_role=self.device_role,
+                           manufacturer=self.manufacturer.title(),
+                           platform=self.platform,
+                           device_type = self.device_type,
+                           primary_ip = self.primary_ip,
+                           tenant = self.tenants,
+                           custom_fields = {'Connection_Scheme': str(self.conn_scheme)},
+                           rack = int(self.racks)
+                    )
+                else:
+                    nb.dcim.devices.create(
+                        name=self.name_device,
+                        status=str(self.management).lower(),
+                        site=self.site,
+                        location=self.location,
+                        device_role=self.device_role,
+                        manufacturer=self.manufacturer.title(),
+                        platform=self.platform[0],
+                        device_type=self.device_type,
+                        primary_ip=self.primary_ip,
+                        tenant=self.tenants,
+                        custom_fields={'Connection_Scheme': str(self.conn_scheme)},
+                    )
 
-            except pynetbox.core.query.RequestError:
-                       print(f'device {self.name_device} is already done or \n')
-                       print('Error:\n', traceback.format_exc())
+
+            except pynetbox.core.query.RequestError as err:
+                       print(f'device {self.name_device} is already done or \n {err}')
                        return False
 
 
