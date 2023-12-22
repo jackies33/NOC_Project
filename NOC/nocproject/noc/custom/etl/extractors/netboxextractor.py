@@ -18,13 +18,31 @@ from noc.core.etl.models.networksegmentprofile import NetworkSegmentProfile
 from noc.core.etl.models.administrativedomain import AdministrativeDomain
 from noc.core.etl.models.authprofile import AuthProfile
 from noc.custom.etl.extractors.classifier_for_extractor import CLASSIFIER
-from noc.custom.etl.extractors.psql_conn import PSQL_CONN
 from noc.custom.etl.engine.my_pass import netbox_url,netbox_api_token
 
 class NBRemoteSystem(BaseRemoteSystem):
     """
 
         """
+
+
+
+
+
+@NBRemoteSystem.extractor
+class NBAuthProfile(BaseExtractor):
+    """
+    """
+
+    name = "authprofile"
+    model = AuthProfile
+
+
+
+    data = [
+        ['2', "nocproject", "","","","h#JN0C8b","","nocproject",""],
+        ['3', "nocproject1", "","","","h#JN0C8b","","nocpr0ject",""],
+    ]
 
 
 @NBRemoteSystem.extractor
@@ -233,19 +251,25 @@ class NBManagedObjectExtractor(BaseExtractor):
                         custom_filed = dict(device.custom_fields)
                         classification = CLASSIFIER(device_type,device_role,custom_filed)
                         AuProf = classification.classifier_AuthProf(device_type,device_role)
-                        #location = str(device.location)
-                        location_id = device.location.id
                         AuthScheme = classification.classifier_AuthScheme(custom_filed)
-                        location_name = device.location
-                        location_all = self.nb.dcim.locations.get(location_id)
-                        parent = location_all.parent
-                        location = 'empty'
-                        custom_filed = dict(device.custom_fields)
-                        psql = PSQL_CONN(location_id)
-                        if parent == None:
-                            location = str(location_name)
-                        elif parent != None:
-                            location = str(psql.get_result())
+                        location = device["location"]
+                        rack = device["rack"]
+                        depth = location["_depth"]
+                        main_loc_name = location["name"]
+                        loc_id = location["id"]
+                        my_address = ''
+                        while depth != 0:
+                            loc_parent = self.nb.dcim.locations.get(id=loc_id)['parent']
+                            my_address = (loc_parent["name"]) + ', ' + my_address
+                            depth = loc_parent["_depth"]
+                            loc_id = loc_parent["id"]
+                        #    device = device
+                        #    print(device)
+                        my_address = my_address.lstrip(', ')
+                        if rack != None:
+                            my_address = my_address + main_loc_name + ', ' + f'rack#{rack["name"]}'
+                        else:
+                            my_address = my_address + main_loc_name
                         yield ManagedObject(
                             id=host_id,
                             name=host_name,
@@ -260,7 +284,7 @@ class NBManagedObjectExtractor(BaseExtractor):
                             object_profile=OP,  # ID Object Profile
                             scheme=AuthScheme,  # AccessType 2 - SSH
                             address=host_ip_address,  # Address
-                            description=location,
+                            description=my_address,
                             tags=[],
                             auth_profile=AuProf,  # auth_profile
                         )

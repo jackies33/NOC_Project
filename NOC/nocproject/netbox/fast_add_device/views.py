@@ -1,7 +1,7 @@
 
-from django.views.generic.edit import CreateView
+
+
 from django.shortcuts import render
-from django.urls import reverse_lazy
 from django.views import generic
 from .forms import DevicePluginForm
 from django.http import HttpResponse
@@ -32,9 +32,14 @@ class Add_Device_View(generic.TemplateView):
             device_role = form.cleaned_data['device_role'].id
             tenants = form.cleaned_data['tenants'].id
             location = form.cleaned_data['location'].id
+            try:
+                racks = form.cleaned_data['racks'].id
+            except Exception as err:
+                print(err)
+                racks = None
             managment = form.cleaned_data['managment']
             device_connect = CONNECT_DEVICE(str(ip_address),int(platform),int(device_type),
-                                            int(device_role),int(tenants),int(location),int(managment))
+                                            int(device_role),int(tenants),int(location),int(managment), racks)
             connecting = device_connect.prepare_for_connection()
             #location_id = form.cleaned_data['location'].id
             #print(data)
@@ -53,3 +58,4 @@ class Add_Device_View(generic.TemplateView):
 
         else:
             return HttpResponse('Something gone wrong', status=HTTPStatus.BAD_REQUEST)
+

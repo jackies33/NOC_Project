@@ -15,14 +15,15 @@ _______________________________
 Description=Collecting metrics ping for dispetcher to CH
 
 [Service]
-ExecStart=/usr/bin/python3 /opt/cron/noc/dispetcher/icmp/icmp_main.py
-WorkingDirectory=/opt/cron/noc/dispetcher/icmp/
+ExecStart=/usr/bin/python3 /opt/cron/dispetcher/icmp/icmp_main.py
+WorkingDirectory=/opt/cron/dispetcher/icmp/
 StandardOutput=file:/var/log/cron_dispetcher/icmp_output.log
 StandardError=file:/var/log/cron_dispetcher/icmp_error.log
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
+
 _________________________________
 
 <<----cron_dispetcher_icmp.service

@@ -19,7 +19,7 @@ Description=Listen and classifier web hooks from netbox App
 
 [Service]
 ExecStart=/usr/bin/python3 /opt/noc/custom/etl/web_root.py
-StandardOutput=file:/var/log/web_root/output.log
+StandardOutput=file:lweb_root/output.log
 StandardError=file:/var/log/web_root/error.log
 Restart=always
 
@@ -158,5 +158,5 @@ def classifier_and_executor(event,time1,target,data_device_id,data_device_create
 
 
 if __name__ == '__main__':
-    app.run(host='10.50.74.170', port=3501)
+    app.run(host='10.50.74.171', port=3501)
 
