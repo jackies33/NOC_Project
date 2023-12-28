@@ -1,6 +1,6 @@
 
 ---
-- hosts: mongo_backup
+- hosts: main_node_backup
   gather_facts: False
   become: true
   tasks:

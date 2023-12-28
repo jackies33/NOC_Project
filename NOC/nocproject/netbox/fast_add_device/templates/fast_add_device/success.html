@@ -1,39 +1,20 @@
 
+
 {% extends 'base/layout.html' %}
 {% load static %}
 {% load form_helpers %}
-
 {% block content %}
-<head>
-  <meta charset="UTF-8">
-  <title>{% block title %}{% endblock %}</title>
-
-     <style>
-        .myfield{
-            border:1px solid #ccc;
-            border-radius:5px;
-            height:25px;
-            width:200px;
-            margin: 10px 10px 10px 0;
-            color: black;
-        }
-        .mybutton{
-            padding: 12px 40px;
-            border-radius: 8px;
-            box-shadow: 2px 2px 2px 1px rgb(131, 131, 219) ;
-            border: 1px solid gray;
-            font-size: 20px;
-            color: green;
-        }
-     </style>
-</head>
 <h2 class="offset-3"></h2>
 <br>
-
     {% if response %}
-       <p class="offset-3"> Device  < {{ connecting }} >  was added sucessfull. </p>
+         <div style="text-align: center">
+             <p class="offset-3" style="color:green;" > Device  <<<  {{ connecting }}  >>>  was added sucessfull. </p>
+         </div>
     {% endif %}
 <br>
-        <button><a href="{% url 'plugins:fast_add_device:add_device' %}">Add one more device</a></button>
-
+<div style="text-align: center">
+  <button><a href="{% url 'plugins:fast_add_device:add_device' %}">Add one more device</a></button>
+</div>
 {% endblock %}
+
+

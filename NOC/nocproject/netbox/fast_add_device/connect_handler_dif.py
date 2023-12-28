@@ -4,7 +4,7 @@
 import socket
 from .add_device import ADD_NB
 from .classifier import classifier_device_type
-from .my_pass import mylogin , mypass
+from .my_pass import mylogin , mypass ,rescue_login, rescue_pass
 from netmiko import ConnectHandler , NetMikoAuthenticationException, NetMikoTimeoutException
 import re
 from jnpr.junos.exception import ConnectAuthError,ConnectClosedError,ConnectError,ConnectTimeoutError
@@ -47,7 +47,7 @@ class CONNECT_HANDLER():
             result = sock.connect_ex((ip_conn, 22))
             scheme = 0
             if result == 0:
-                scheme = 'ssh'
+                     scheme = 'ssh'
             else:
                 result = sock.connect_ex((ip_conn, 23))
                 if result == 0:
@@ -58,8 +58,8 @@ class CONNECT_HANDLER():
             return scheme
 
 
-        def template_conn(self,ip_conn,type_device_for_conn):
-
+        def template_conn(self,ip_conn,type_device_for_conn,conn_scheme):
+            if conn_scheme == "ssh":
                 host1 = {
 
                     "host": ip_conn,
@@ -68,12 +68,22 @@ class CONNECT_HANDLER():
                     "device_type": type_device_for_conn,
                     "global_delay_factor": 0.5,
                 }
-                return host1
+            else:
+                host1 = {
+
+                    "host": ip_conn,
+                    "username": login,
+                    "password": password,
+                    "device_type": type_device_for_conn,
+                    "global_delay_factor": 3,
+                    "port": 23
+                }
+            return host1
 
         def conn_Huawei(self,*args):
 
                type_device_for_conn = 'huawei'
-               host1 = self.template_conn(self.ip_conn,type_device_for_conn)
+               host1 = self.template_conn(self.ip_conn,type_device_for_conn,self.conn_scheme)
 
 
                try:
@@ -92,7 +102,7 @@ class CONNECT_HANDLER():
                                 interface_name = re.findall(re_ip, output_ip)[0]
                                 manufacturer = 'Huawei Technologies Co.'
                                 device_type = classifier_device_type(manufacturer,re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q'
-                                                                                r'|S5700-28C-EI-24S|S5735-S48S4X|CE8851-32CQ8DQ-P', output_version))
+                                                                                r'|S5700-28C-EI-24S|S5735-S48S4X|CE8851-32CQ8DQ-P|CE6881-48S6CQ', output_version)[0])
                                 # print(device_name,device_type,interface_name)
                                 net_connect.disconnect()
                                 adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
@@ -101,96 +111,113 @@ class CONNECT_HANDLER():
                                 return result
 
 
-               except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
+               except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
-               except Exception as e:
-                   print(f"Error {e}")
+                    return [False, err]
+               except Exception as err:
+                   print(f"Error {err}")
+                   return [False, err]
 
         def conn_Juniper_rpc(self,*args):
-               #print('this is connect_to_device_juniper!!!!')
-               #host1 = self.template_conn(ip_conn,manufacturer)
-
-               try:
-
-                                primary_ip = (f'{self.ip_conn}/{self.mask}')
-                                dev = Device(host=self.ip_conn, user='nocproject', password='h#JN0C8b')
+            #print('this is connect_to_device_juniper!!!!')
+            #host1 = self.template_conn(ip_conn,manufacturer)
+            i=0
+            dev = Device(host=self.ip_conn, user=mylogin, password=mypass)
+            result = [False, 'start']
+            while i<2:
+                    try:
                                 dev.open()
-                                device_name = dev.facts['hostname']
-                                device_type = dev.facts['model']
-                                config = dev.rpc.get_config(filter_xml=etree.XML(f'''
-                                             <configuration>
-                                                 <interfaces>
-                                                     <interface>
-                                                        <unit>
-                                                           <family>
-                                                              <inet>
-                                                                 <address>
-                                                                    <name>{self.ip_conn}/{self.mask}</name>
-                                                                 </address>
-                                                              </inet>
-                                                           </family>
-                                                        </unit>
-                                                     </interface>
-                                                 </interfaces>
-                                             </configuration>'''),
-                                                            options={'database': 'committed', 'inherit': 'inherit'})
+                    except Exception as err:
+                         print(f"Error {err}")
+                         dev = Device(host=self.ip_conn, user=rescue_login, password=rescue_pass)
+                         i = i + 1
+                         continue
 
-                                value_xml = etree.tostring(config, encoding='unicode', pretty_print=True)
-                                root = etree.fromstring(value_xml)
-                                interface_name = ''
-                                #print('this is connect_to_device_juniper_middle!!!!')
-                                for interface in root.xpath('//interface'):
-                                    interface_name = interface.find('name').text
-                                    for unit in interface.xpath('.//unit'):
-                                        unit = unit.find('name').text
-                                        if interface_name == 'fxp0':
-                                            break
-                                        if interface_name == 'vlan':
-                                            interface_name = interface_name + unit
-                                        if interface_name == 'irb':
-                                            interface_name = (f'{interface_name}.{unit}')
-                                        if unit == '0':
-                                            break
-                                        else:
-                                            break
+                    else:
+                        try:
 
-                                dev.close()
-                                manufacturer = 'Juniper Networks'
-                                device_type = classifier_device_type(manufacturer,device_type)
-                                #print('this is connect_to_device_juniper_out!!!!')
-                                adding = ADD_NB(device_name, self.site_name, self.location , self.tenants, self.device_role, manufacturer,
-                                           self.platform , device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
-                                result = adding.add_device()
-                                return result
+                            device_name = dev.facts['hostname']
+                            device_type = dev.facts['model']
+                            config = dev.rpc.get_config(filter_xml=etree.XML(f'''
+                                         <configuration>
+                                             <interfaces>
+                                                 <interface>
+                                                    <unit>
+                                                       <family>
+                                                          <inet>
+                                                             <address>
+                                                                <name>{self.ip_conn}/{self.mask}</name>
+                                                             </address>
+                                                          </inet>
+                                                       </family>
+                                                    </unit>
+                                                 </interface>
+                                             </interfaces>
+                                         </configuration>'''),
+                                                        options={'database': 'committed', 'inherit': 'inherit'})
 
-               except (ConnectAuthError, ConnectClosedError,ConnectError,ConnectTimeoutError):  # exceptions
-                    print('\n\n not connect to ' + self.ip_conn + '\n\n')
-               except Exception as e:
-                   print(f"Error {e}")
+                            value_xml = etree.tostring(config, encoding='unicode', pretty_print=True)
+                            root = etree.fromstring(value_xml)
+                            interface_name = ''
+                            primary_ip = (f'{self.ip_conn}/{self.mask}')
+                            #print('this is connect_to_device_juniper_middle!!!!')
+                            for interface in root.xpath('//interface'):
+                                interface_name = interface.find('name').text
+                                for unit in interface.xpath('.//unit'):
+                                    unit = unit.find('name').text
+                                    if interface_name == 'fxp0':
+                                        break
+                                    if interface_name == 'vlan':
+                                        interface_name = interface_name + unit
+                                    if interface_name == 'irb':
+                                        interface_name = (f'{interface_name}.{unit}')
+                                    if unit == '0':
+                                        break
+                                    else:
+                                        break
+
+                            dev.close()
+                            manufacturer = 'Juniper Networks'
+                            device_type = classifier_device_type(manufacturer,device_type)
+                            #print('this is connect_to_device_juniper_out!!!!')
+                            adding = ADD_NB(device_name, self.site_name, self.location , self.tenants, self.device_role, manufacturer,
+                                       self.platform , device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
+                            result = adding.add_device()
+                            break
+
+
+                        except Exception as err:
+                            print(err)
+                            return [False, err]
+            return result
+
 
 
 
         def conn_Cisco_IOS(self,*args):
                type_device_for_conn = "cisco_ios"
-               host1 = self.template_conn(self.ip_conn, type_device_for_conn)
+               host1 = self.template_conn(self.ip_conn, type_device_for_conn,self.conn_scheme)
                try:
                         with ConnectHandler(**host1) as net_connect:
                                 primary_ip = (f'{self.ip_conn}/{self.mask}')
                                 output_main = net_connect.send_command('show version', delay_factor=.5)
                                 device_name = re.findall(f"\S+ uptime is", output_main)[0].split("uptime is")[0].strip()
                                 manufacturer = 'Cisco Systems'
-                                device_type = classifier_device_type(manufacturer,re.findall(f"cisco \S+", output_main)[0].split("cisco")[1].strip())
+                                device_type = classifier_device_type(manufacturer,re.findall(f"^cisco \S+", output_main,re.MULTILINE)[0].split("cisco")[1].strip())
                                 output_interface_name = net_connect.send_command(f'show ip interface brief | include {self.ip_conn}', delay_factor=.5)
                                 interface_name = re.findall(f"^\S+\s+{self.ip_conn}", output_interface_name, re.MULTILINE)[0].split(self.ip_conn)[0].strip()
                                 adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
                                                            self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
                                 result = adding.add_device()
+                                net_connect.disconnect()
                                 return result
 
-               except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
+               except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
-               except Exception as e:
-                   print(f"Error {e}")
+                    return [False, err]
+               except Exception as err:
+                   print(f"Error {err}")
+                   return [False, err]
 
         def conn_FortiGate(self, *args):
 
@@ -234,6 +261,7 @@ class CONNECT_HANDLER():
                 return result
             except Exception as err:
                 print(f'\n\n{datetime.datetime.now()}\n\n{err}')
+                return [False, err]
 
 
 
@@ -268,16 +296,19 @@ class CONNECT_HANDLER():
                                                    self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
                         result = adding.add_device()
                         return result
-            except IndexError as e:
-                        print(f"\n\n\n{e}\n\n\n")
-            except SSHException as s:
-                        print(f"\n\n\n{s}\n\n\n")
-            except Exception as e:
-                   print(f"Error {e}")
+            except IndexError as err:
+                        print(f"\n\n\n{err}\n\n\n")
+                        return [False, err]
+            except SSHException as err:
+                        print(f"\n\n\n{err}\n\n\n")
+                        return [False, err]
+            except Exception as err:
+                        print(f"Error {err}")
+                        return [False, err]
 
         def conn_Cisco_NXOS(self,*args):
                type_device_for_conn = "cisco_nxos"
-               host1 = self.template_conn(self.ip_conn, type_device_for_conn)
+               host1 = self.template_conn(self.ip_conn, type_device_for_conn,self.conn_scheme)
                try:
                         with ConnectHandler(**host1) as net_connect:
                                 primary_ip = (f'{self.ip_conn}/{self.mask}')
@@ -291,12 +322,16 @@ class CONNECT_HANDLER():
                                 adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
                                                            self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
                                 result = adding.add_device()
+                                net_connect.disconnect()
                                 return result
 
-               except (NetMikoAuthenticationException, NetMikoTimeoutException):  # exceptions
+               except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
-               except Exception as e:
-                   print(f"Error {e}")
+                    return [False, err]
+               except Exception as err:
+                   print(f"Error {err}")
+                   return [False, err]
+
 
 
         def conn_AWMP(self,*args):
@@ -315,8 +350,9 @@ class CONNECT_HANDLER():
                                    self.management, self.racks)
                    result = adding.add_device()
                    return result
-               except Exception as e:
-                   print(f"Error {e}")
+               except Exception as err:
+                   print(f"Error {err}")
+                   return [False, err]
 
 
 if __name__ == '__main__':

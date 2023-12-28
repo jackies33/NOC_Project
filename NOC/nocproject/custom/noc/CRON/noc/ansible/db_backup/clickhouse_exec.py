@@ -20,6 +20,7 @@ def exec():
         subprocess.run("rm -R /var/lib/clickhouse/backup/*", shell=True)
         return "1"
     except Exception as e:
+        print(e)
         return "0"
 
 if __name__ == '__main__':
