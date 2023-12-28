@@ -1,7 +1,7 @@
 
 
 ---
-- hosts: clickhouse_backup
+- hosts: main_node_backup
   become: true
   tasks:
     - name: Run clickhouse_exec.py

@@ -1,7 +1,7 @@
 
 
 
-import traceback
+
 import time
 import pynetbox
 from .tgbot import tg_bot
@@ -75,23 +75,9 @@ class ADD_NB():
             #print(self.name_device, site, self.location, self.tenants, self.device_role,
                  # self.manufacturer, self.platform, self.device_type,
                  # self.primary_ip, self.interface_name, self.conn_scheme, self.management)
-            try:
-                if self.racks != None:
-                    nb.dcim.devices.create(
-                           name=self.name_device,
-                           status = str(self.management).lower(),
-                           site=self.site,
-                           location=self.location,
-                           device_role=self.device_role,
-                           manufacturer=self.manufacturer.title(),
-                           platform=self.platform,
-                           device_type = self.device_type,
-                           primary_ip = self.primary_ip,
-                           tenant = self.tenants,
-                           custom_fields = {'Connection_Scheme': str(self.conn_scheme)},
-                           rack = int(self.racks)
-                    )
-                else:
+            if self.racks == None:
+
+                try:
                     nb.dcim.devices.create(
                         name=self.name_device,
                         status=str(self.management).lower(),
@@ -99,18 +85,36 @@ class ADD_NB():
                         location=self.location,
                         device_role=self.device_role,
                         manufacturer=self.manufacturer.title(),
-                        platform=self.platform[0],
+                        platform=self.platform,
                         device_type=self.device_type,
                         primary_ip=self.primary_ip,
                         tenant=self.tenants,
                         custom_fields={'Connection_Scheme': str(self.conn_scheme)},
                     )
+                except Exception as err:
+                    print(f'device {self.name_device} is already done or \n {err}')
+                    return [False, err]
 
+            else:
 
-            except pynetbox.core.query.RequestError as err:
-                       print(f'device {self.name_device} is already done or \n {err}')
-                       return False
-
+                try:
+                    nb.dcim.devices.create(
+                        name=self.name_device,
+                        status=str(self.management).lower(),
+                        site=self.site,
+                        location=self.location,
+                        device_role=self.device_role,
+                        manufacturer=self.manufacturer.title(),
+                        platform=self.platform,
+                        device_type=self.device_type,
+                        primary_ip=self.primary_ip,
+                        tenant=self.tenants,
+                        custom_fields={'Connection_Scheme': str(self.conn_scheme)},
+                        rack=self.racks
+                    )
+                except Exception as err:
+                    print(f'device {self.name_device} is already done or \n {err}')
+                    return [False, err]
 
             time.sleep(1)
             id_device = nb.dcim.devices.get(name=self.name_device)
@@ -121,9 +125,9 @@ class ADD_NB():
                     type=self.type_of_interface,
                     enabled=True,
             )
-            except pynetbox.core.query.RequestError:
-                    print(f'interface {self.interface_name} is already done')
-                    return False
+            except Exception as err:
+                    print(f'interface {self.interface_name} is already done \n\n {err} \n\n\ ')
+                    return [False, err]
 
             time.sleep(1)
             interface = nb.dcim.interfaces.get(name=self.interface_name, device_id=id_device.id)
@@ -137,16 +141,17 @@ class ADD_NB():
                        assigned_object_id=interface_id,
                        )
 
-            except TypeError:
-                print('Error for create an ip_address')
-                return False
+
+            except Exception as err:
+                print(f'Error for create an ip_address {err}')
+                return [False, err]
             time.sleep(1)
 
             try:
                 id_device.update({'primary_ip4': {'address': self.primary_ip}})
-            except pynetbox.core.query.RequestError:
-                print(f"ip_address {self.primary_ip} is already done")
-                return False
+            except Exception as err:
+                print(f"ip_address {self.primary_ip} is already done {err}")
+                return [False, err]
             else:
                 print(f"Succesfull create and update device - {self.name_device} and send to telegram chat")
                 message = (f'Netbox.handler[Event_Add Device]\n Device Name - [ {self.name_device} ] '

@@ -48,7 +48,7 @@ There you'll need to choose only for check stack status profiles
 """
 
 n = None
-profile_list = "'EX3400-48P','EX2200-48P-4G','EX3300-48P'"
+profile_list = "'EX3400-48P','EX2200-48P-4G','EX3300-48P','EX3300-24T','EX3300-48T','EX3400-24P'"
 my_inventory = []
 "'i' - for correct job scheduler. It's need when you start the service , 'my_inventory' is empty yet, and it's nesseccery to fill it " \
 "'i' - use here like starting point "

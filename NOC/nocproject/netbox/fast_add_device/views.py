@@ -11,6 +11,7 @@ from .connect_to_device import CONNECT_DEVICE
 class Add_Device_View(generic.TemplateView):
     template_name_success = 'fast_add_device/success.html'
     template_name_main = 'fast_add_device/main.html'
+    template_bad_result = 'fast_add_device/bad_result.html'
     form_class = DevicePluginForm
 
     def get_context_data(self, **kwargs):
@@ -34,6 +35,7 @@ class Add_Device_View(generic.TemplateView):
             location = form.cleaned_data['location'].id
             try:
                 racks = form.cleaned_data['racks'].id
+                racks = int(racks)
             except Exception as err:
                 print(err)
                 racks = None
@@ -52,6 +54,9 @@ class Add_Device_View(generic.TemplateView):
 
                 return render(request, self.template_name_success, context={'response': "True",'connecting': connecting[1]},status=HTTPStatus.CREATED)
 
+            elif connecting[0] == False:
+                return render(request, self.template_bad_result,
+                              context={'response': "False", 'connecting': connecting[1]}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
             else:
                 return HttpResponse('Something gone wrong', status=HTTPStatus.BAD_REQUEST)
                 #return render(request, self.template_name_main, context={'form': self.form_class, 'response': "True"}, status=HTTPStatus.CREATED)
