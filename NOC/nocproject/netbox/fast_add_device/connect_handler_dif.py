@@ -27,7 +27,7 @@ class CONNECT_HANDLER():
         """
 
         def __init__(self, ip_conn = None,mask = None,platform = None,site_name = None,
-                     location = None,device_role = None,tenants = None,conn_scheme = None,management = None,
+                     location = None,device_role = None,tenants = None,conn_scheme = None,
                      racks = None):
 
             self.ip_conn = ip_conn
@@ -38,8 +38,8 @@ class CONNECT_HANDLER():
             self.device_role = device_role
             self.tenants = tenants
             self.conn_scheme = conn_scheme
-            self.management = management
             self.racks = racks
+            self.management = 1
 
 
         def check_ssh(self,ip_conn):
@@ -79,6 +79,7 @@ class CONNECT_HANDLER():
                     "port": 23
                 }
             return host1
+
 
         def conn_Huawei(self,*args):
 
@@ -353,6 +354,35 @@ class CONNECT_HANDLER():
                except Exception as err:
                    print(f"Error {err}")
                    return [False, err]
+
+        def conn_OS_Linux(self,*args):
+            type_device_for_conn = "linux"
+            host1 = self.template_conn(self.ip_conn, type_device_for_conn, self.conn_scheme)
+            try:
+                with ConnectHandler(**host1) as net_connect:
+                    primary_ip = (f'{self.ip_conn}/{self.mask}')
+                    sudo = net_connect.send_command('sudo -s', delay_factor=.5, expect_string="#")
+                    output_hostname = net_connect.send_command('cat /etc/hostname', delay_factor=.5, expect_string="#")
+                    device_name = re.findall(r'\S+', output_hostname)[0]
+                    output_interface = net_connect.send_command('ip a', delay_factor=.5, expect_string="#")
+                    interface_name = re.findall(f'^\d+: .+\n.+\n.+inet {self.ip_conn}', output_interface, re.MULTILINE)[0]
+                    interface_name = re.findall(r'\d+: \S+:', interface_name)[0].split(":")[1].strip()
+                    output_device_type = net_connect.send_command('cat /etc/issue', delay_factor=.5, expect_string="#")
+                    manufacturer = 'Meinberg Funkuhren GmbH & Co. KG'
+                    device_type = classifier_device_type(manufacturer, re.findall(r'Meinberg LANTIME OS7|Ubuntu', output_device_type)[0])
+                    adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
+                                    manufacturer,
+                                    self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
+                                    self.management, self.racks)
+                    result = adding.add_device()
+                    return result
+
+
+            except Exception as err:
+                print(f"Error {err}")
+                return [False, err]
+
+
 
 
 if __name__ == '__main__':

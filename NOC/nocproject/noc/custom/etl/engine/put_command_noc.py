@@ -68,7 +68,7 @@ class NOC_SHELL():
             os.chdir(self.command1)
             out2 = subprocess.run(command2.split(), stdout=subprocess.PIPE)
             out1 = str(out2)
-            find = re.findall(r"\[NBRemoteSystem\|managedobject\] Summary: [0-9]+ new, [1-9]+ changed", out1)
+            find = re.findall(r"\[NBRemoteSystem\|managedobject\] Summary: [1-9]+ new, [1-9]+ changed", out1)
             if find != []:
                 out = True
                 return out
