@@ -40,23 +40,32 @@ import time
 status = ''
 
 while True:
-    pg_status = subprocess.run(["systemctl", "is-active", "postgresql@14-main.service"], capture_output=True, text=True).stdout.strip()
+    try:
 
-    if pg_status == "active":
-        if status == "running":
-            pass
-        elif status == "":
-            status = "running"
-        elif status == "waiting":
-            subprocess.run(["systemctl", "start", "keepalived"])
-            status = ""
+        pg_status = subprocess.run(["systemctl", "is-active", "postgresql@13-main.service"], capture_output=True, text=True).stdout.strip()
 
-    else:
-        if status == "running":
-            subprocess.run(["systemctl", "stop", "keepalived"])
-            status = "waiting"
-        elif status == "waiting":
-            pass
+        if pg_status == "active":
+            if status == "running":
+                pass
+            elif status == "":
+                status = "running"
+            elif status == "waiting":
+               # subprocess.run("\nsystemctl stop postgresql@13-main\n", shell=True, text=True,capture_output=True)
+                subprocess.run(["systemctl", "start", "keepalived"])
+                #subprocess.run("\nrm -R /var/lib/postgresql/13/main/pg_replslot/*\n", shell=True, text=True,capture_output=True)
+                #subprocess.run("\nsystemctl start postgresql@13-main\n", shell=True, text=True, capture_output=True)
+                status = ""
+
+        else:
+            if status == "running":
+                subprocess.run(["systemctl", "stop", "keepalived"])
+                status = "waiting"
+
+            elif status == "waiting":
+                pass
+        time.sleep(5)
+    except Exception as e:
+        print(e)
     time.sleep(5)
 
 

@@ -44,6 +44,14 @@ class ADD_NB():
                 self.management = "Active"
             elif self.management == 2:
                 self.management = "Offline"
+            else:
+                self.management = "Active"
+            if  self.conn_scheme == '1':
+                self.conn_scheme = "ssh"
+            elif self.conn_scheme == '2':
+                self.conn_scheme = "telnet"
+            else:
+                self.management = 'ssh'
             nb = pynetbox.api(url=netbox_url,
                               token=netbox_api_token)
             nb.http_session.verify = False
