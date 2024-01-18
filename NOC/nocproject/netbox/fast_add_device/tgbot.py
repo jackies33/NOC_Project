@@ -7,7 +7,7 @@ class tg_bot():
     Class for telegram bot , send messages
 
     """
-    from my_pass import tg_token, chat_id
+    from .my_pass import tg_token, chat_id
     def __init__(self,message = None):
         self.message = message
 

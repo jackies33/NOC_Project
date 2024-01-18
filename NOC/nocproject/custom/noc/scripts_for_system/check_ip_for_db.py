@@ -65,7 +65,7 @@ while True:
             #subprocess.run("sudo mount 10.50.100.75:/opt/nfs/zabbix.tech.mosreg.ru /mnt/sharedfolder_client", shell=True)
             #subprocess.run(f"sudo PGPASSWORD=zabbix pg_dump -U zabix zabbix > /mnt/sharedfolder_client/Full/postgresql/zabbix_backup_{dt_string}.sql",shell=True)
             subprocess.run(f"sudo PGPASSWORD=zabbix pg_dump -U zabix zabbix > /var/lib/postgresql/13/backup/zabbix_backup_{dt_string}.sql",shell=True)
-            #subprocess.run("\nrm -R /var/lib/postgresql/13/main/*\n", shell=True,text=True,capture_output=True)
+            #subprocess.run("\n rm -R /var/lib/postgresql/13/main/* \n", shell=True,text=True,capture_output=True)
             #child = pexpect.spawn("sudo pg_basebackup -h 10.50.50.171 -U replication -X stream -C -S replica_1 -v -R -D /var/lib/postgresql/13/main/")
             #child.expect("Password:")
             #child.sendline("P@ssw0rd")
