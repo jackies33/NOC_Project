@@ -13,11 +13,12 @@ class OFFLINE_DEV():
     Class for connection to different device
     """
 
-    def __init__(self, device_name = None ,location= None ,tenants = None ,device_role = None,
+    def __init__(self, device_name = None ,site = None , location= None ,tenants = None ,device_role = None,
                  manufacturer = None ,platform = None ,device_type = None ,ip_address = None,
                  interface_name = None, conn_scheme = None, management = None, racks = None):
 
         self.device_name = device_name
+        self.site = site
         self.location = location
         self.tenants = tenants
         self.device_role = device_role
@@ -35,9 +36,8 @@ class OFFLINE_DEV():
 
                 nb = pynetbox.api(url=netbox_url, token=netbox_api_token)
                 nb.http_session.verify = False
-                location_for_site = nb.dcim.locations.get(id=self.location)
-                site = int(location_for_site.site.id)
-                adding = ADD_NB(self.device_name, site, self.location, self.tenants, self.device_role,
+
+                adding = ADD_NB(self.device_name, self.site, self.location, self.tenants, self.device_role,
                                 self.manufacturer,
                                 self.platform, self.device_type, self.ip_address, self.interface_name, self.conn_scheme,
                                 self.management, self.racks)

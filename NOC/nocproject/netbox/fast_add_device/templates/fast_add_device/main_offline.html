@@ -78,12 +78,17 @@
                 <td>{{ form.managed_state.errors }}</td>
             </tr>
             <tr>
-                <td align="left"><b>{{ form.location.label_tag }}*</b></td>
+                <td align="left"><b>{{ form.site.label_tag }}*</b></td>
+                <td>{{ form.site }}</td>
+                <td>{{ form.managed_state.errors }}</td>
+            </tr>
+            <tr>
+                <td align="left"><b>{{ form.location.label_tag }}</b></td>
                 <td>{{ form.location }}</td>
                 <td>{{ form.managed_state.errors }}</td>
             </tr>
             <tr>
-                <td align="left"><b>{{ form.racks.label_tag }}*</b></td>
+                <td align="left"><b>{{ form.racks.label_tag }}</b></td>
                 <td>{{ form.racks }}</td>
                 <td>{{ form.managed_state.errors }}</td>
             </tr>

@@ -28,7 +28,7 @@ class CONNECT_HANDLER():
 
         def __init__(self, ip_conn = None,mask = None,platform = None,site_name = None,
                      location = None,device_role = None,tenants = None,conn_scheme = None,
-                     racks = None):
+                     racks = None ,stack_enable = None):
 
             self.ip_conn = ip_conn
             self.mask = mask
@@ -40,6 +40,7 @@ class CONNECT_HANDLER():
             self.conn_scheme = conn_scheme
             self.racks = racks
             self.management = 1
+            self.stack_enable = stack_enable
 
 
         def check_ssh(self,ip_conn):
@@ -157,12 +158,10 @@ class CONNECT_HANDLER():
                                          </configuration>'''),
                                                         options={'database': 'committed', 'inherit': 'inherit'})
 
-                            value_xml = etree.tostring(config, encoding='unicode', pretty_print=True)
-                            root = etree.fromstring(value_xml)
                             interface_name = ''
                             primary_ip = (f'{self.ip_conn}/{self.mask}')
                             #print('this is connect_to_device_juniper_middle!!!!')
-                            for interface in root.xpath('//interface'):
+                            for interface in config.xpath('//interface'):
                                 interface_name = interface.find('name').text
                                 for unit in interface.xpath('.//unit'):
                                     unit = unit.find('name').text
@@ -176,17 +175,44 @@ class CONNECT_HANDLER():
                                         break
                                     else:
                                         break
-
+                            list_serial_devices = []
+                            if self.stack_enable == True:
+                                memb_count = 0
+                                vc_info = dev.rpc.get_virtual_chassis_information()
+                                # print(etree.tounicode(vc_info))
+                                # vc_mode = vc_info.find('.//virtual-chassis-mode').text
+                                members = vc_info.findall('.//member')
+                                # if vc_mode == 'Enabled':
+                                for member in members:
+                                    member_id = int(member.find('member-id').text)
+                                    member_serial_number = member.find('member-serial-number').text
+                                    role = member.find('member-role').text
+                                    if role == "Master*":
+                                        member_role = True
+                                    else:
+                                        member_role = False
+                                    # print(f"Member ID: {member_id}, Serial Status: {member_serial_status}")
+                                    memb_count = memb_count + 1
+                                    list_serial_devices.append(
+                                        {'member_id': member_id, 'sn_number': member_serial_number,
+                                         'master': member_role})
+                                if memb_count == 1:
+                                    self.stack_enable = False
+                                elif memb_count > 1:
+                                    self.stack_enable = True
+                            elif self.stack_enable == False:
+                                inventory = dev.rpc.get_chassis_inventory()
+                                serial_number = str(inventory.findtext('.//serial-number'))
+                                list_serial_devices.append(
+                                    {'member_id': 0, 'sn_number': serial_number, 'master': False})
                             dev.close()
                             manufacturer = 'Juniper Networks'
                             device_type = classifier_device_type(manufacturer,device_type)
-                            #print('this is connect_to_device_juniper_out!!!!')
-                            adding = ADD_NB(device_name, self.site_name, self.location , self.tenants, self.device_role, manufacturer,
-                                       self.platform , device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
+                            adding = ADD_NB(device_name, self.site_name, self.location , self.tenants, self.device_role,
+                                            manufacturer,self.platform , device_type, primary_ip, interface_name,
+                                            self.conn_scheme,self.management, self.racks, list_serial_devices, self.stack_enable)
                             result = adding.add_device()
                             break
-
-
                         except Exception as err:
                             print(err)
                             return [False, err]

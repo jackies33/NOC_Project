@@ -252,24 +252,10 @@ class NBManagedObjectExtractor(BaseExtractor):
                         classification = CLASSIFIER(device_type,device_role,custom_filed)
                         AuProf = classification.classifier_AuthProf(device_type,device_role)
                         AuthScheme = classification.classifier_AuthScheme(custom_filed)
-                        location = device["location"]
-                        rack = device["rack"]
-                        depth = location["_depth"]
-                        main_loc_name = location["name"]
-                        loc_id = location["id"]
-                        my_address = ''
-                        while depth != 0:
-                            loc_parent = self.nb.dcim.locations.get(id=loc_id)['parent']
-                            my_address = (loc_parent["name"]) + ', ' + my_address
-                            depth = loc_parent["_depth"]
-                            loc_id = loc_parent["id"]
-                        #    device = device
-                        #    print(device)
-                        my_address = my_address.lstrip(', ')
-                        if rack != None:
-                            my_address = my_address + main_loc_name + ', ' + f'rack#{rack["name"]}'
-                        else:
-                            my_address = my_address + main_loc_name
+                        site = device.site.id
+                        site = self.nb.dcim.sites.get(id=site)
+                        my_address = str(site.physical_address)
+
                         yield ManagedObject(
                             id=host_id,
                             name=host_name,
