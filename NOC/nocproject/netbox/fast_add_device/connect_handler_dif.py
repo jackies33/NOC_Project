@@ -87,7 +87,6 @@ class CONNECT_HANDLER():
                type_device_for_conn = 'huawei'
                host1 = self.template_conn(self.ip_conn,type_device_for_conn,self.conn_scheme)
 
-
                try:
 
                         with ConnectHandler(**host1) as net_connect:
@@ -107,8 +106,53 @@ class CONNECT_HANDLER():
                                                                                 r'|S5700-28C-EI-24S|S5735-S48S4X|CE8851-32CQ8DQ-P|CE6881-48S6CQ', output_version)[0])
                                 # print(device_name,device_type,interface_name)
                                 net_connect.disconnect()
-                                adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
-                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
+
+                                list_serial_devices = []
+                                if self.stack_enable == True:
+                                    output_stack = net_connect.send_command('display stack', delay_factor=.5)
+                                    slave_output = re.findall(r"\d\s+Slave", output_stack)
+                                    standby_output = re.findall(r"\d\s+Standby", output_stack)
+                                    master_output = re.findall(r"\d\s+Master", output_stack)
+                                    for slave in slave_output:
+                                        member_id = slave.replace(" ", "").split('Slave')[0]
+                                        list_serial_devices.append(
+                                            {'member_id': member_id, 'sn_number': '', 'master': False})
+                                    for standby in standby_output:
+                                        member_id = standby.replace(" ", "").split('Standby')[0]
+                                        list_serial_devices.append(
+                                            {'member_id': member_id, 'sn_number': '', 'master': False})
+                                    for master in master_output:
+                                        member_id = master.replace(" ", "").split('Master')[0]
+                                        list_serial_devices.append(
+                                            {'member_id': member_id, 'sn_number': '', 'master': True})
+                                    output_manufacturer = net_connect.send_command('display device manufacture-info', delay_factor=.5)
+                                    member_output = re.findall(f'^\d\s+-\s+\S+', output_manufacturer, re.MULTILINE)
+                                    for member in member_output:
+                                            member_id = re.findall(r'\d\s+-\s+', member)[0].replace(" ", "")[0]
+                                            member_sn = re.findall(r'-\s+\S+', member)[0].replace(" ", "").split("-")[1]
+                                            for l in list_serial_devices:
+                                                if l['member_id'] == member_id:
+                                                    l['sn_number'] = member_sn
+
+                                elif self.stack_enable == False:
+                                    output_sn_main = net_connect.send_command('display device manufacture-info', delay_factor=.5)
+                                    if "Error" in output_sn_main:
+                                        output_sn_main = net_connect.send_command('display esn', delay_factor=.5)
+                                        member_sn = re.findall(f'ESN.+:\s+\S+', output_sn_main)[0].split(':')[1].replace(" ", "")
+                                        list_serial_devices.append({'member_id': 0, 'sn_number': member_sn, 'master': False})
+                                    else:
+                                        member_output = re.findall(f'^\d\s+-\s+\S+', output_sn_main, re.MULTILINE)
+                                        for member in member_output:
+                                            member_sn = re.findall(r'\d\s+-\s+\S+', output_sn_main)[0].replace(" ", "").split("-")[1]
+                                            list_serial_devices.append(
+                                                {'member_id': 0, 'sn_number': member_sn, 'master': False})
+
+
+                                adding = ADD_NB(device_name, self.site_name, self.location, self.tenants,
+                                                self.device_role,
+                                                manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                                self.conn_scheme, self.management, self.racks, list_serial_devices,
+                                                self.stack_enable)
                                 result = adding.add_device()
                                 return result
 
@@ -209,7 +253,7 @@ class CONNECT_HANDLER():
                             manufacturer = 'Juniper Networks'
                             device_type = classifier_device_type(manufacturer,device_type)
                             adding = ADD_NB(device_name, self.site_name, self.location , self.tenants, self.device_role,
-                                            manufacturer,self.platform , device_type, primary_ip, interface_name,
+                                            manufacturer,self.platform , device_type[0], primary_ip, interface_name,
                                             self.conn_scheme,self.management, self.racks, list_serial_devices, self.stack_enable)
                             result = adding.add_device()
                             break
@@ -233,8 +277,43 @@ class CONNECT_HANDLER():
                                 device_type = classifier_device_type(manufacturer,re.findall(f"^cisco \S+", output_main,re.MULTILINE)[0].split("cisco")[1].strip())
                                 output_interface_name = net_connect.send_command(f'show ip interface brief | include {self.ip_conn}', delay_factor=.5)
                                 interface_name = re.findall(f"^\S+\s+{self.ip_conn}", output_interface_name, re.MULTILINE)[0].split(self.ip_conn)[0].strip()
-                                adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
-                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
+                                list_serial_devices = []
+                                if self.stack_enable == True:
+                                    output_switch = net_connect.send_command('show switch', delay_factor=.5)
+                                    member_output = re.findall(r"\d\s+Member \S+", output_switch)
+                                    master_output = re.findall(r"\d\s+Master \S+", output_switch)[0]
+                                    for member in member_output:
+                                        member_id = member.replace(" ", "").split('Member')[0]
+                                        list_serial_devices.append(
+                                            {'member_id': member_id, 'sn_number': '',
+                                             'master': False})
+
+                                    master_id = master_output.replace(" ", "").split('Master')[0]
+                                    list_serial_devices.append(
+                                        {'member_id': master_id, 'sn_number': '',
+                                         'master': True})
+
+                                    output_inventory = net_connect.send_command('show inventory', delay_factor=.5)
+                                    member_output = re.findall(f'^NAME:.+\nPID: {device_type[1]}.+SN: \S+', output_inventory,
+                                                               re.MULTILINE)
+                                    for member in member_output:
+                                        member_id = re.findall(r'NAME: "\d"', member)[0].split('NAME: "')[1].split('"')[
+                                            0]
+                                        member_sn = re.findall(r'SN: \S+', member)[0].split('SN: ')[1]
+                                        for l in list_serial_devices:
+                                            if l['member_id'] == member_id:
+                                                l['sn_number'] = member_sn
+
+                                elif self.stack_enable == False:
+                                    serial_number = re.findall(f'Processor board ID \S+', output_main)[0].split('Processor board ID ')[1]
+                                    list_serial_devices.append(
+                                        {'member_id': 0, 'sn_number': serial_number, 'master': False})
+
+                                adding = ADD_NB(device_name, self.site_name, self.location, self.tenants,
+                                                self.device_role,
+                                                manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                                self.conn_scheme, self.management, self.racks, list_serial_devices,
+                                                self.stack_enable)
                                 result = adding.add_device()
                                 net_connect.disconnect()
                                 return result
@@ -261,6 +340,7 @@ class CONNECT_HANDLER():
                         password=password,
                         look_for_keys=False)
             ssh1 = ssh.invoke_shell()
+            list_serial_devices = []
             try:
                 time.sleep(1)
                 ssh1.send(cmnd1)
@@ -277,13 +357,14 @@ class CONNECT_HANDLER():
                 interface_name = re.findall(f"==.+\n.+\n\s+ip: {self.ip_conn}", output1)[0]
                 interface_name = re.findall(f"==\[\S+\]", interface_name)[0].split("==[")[1].rsplit(']')[0]
                 device_type = re.findall(f"Version: \S+", output1)[0].split("Version: ")[1]
+                member_sn = re.findall(r'Serial-Number: \S+', output1)[0].split("Serial-Number: ")[1]
+                list_serial_devices.append({'member_id': 0, 'sn_number': member_sn, 'master': False})
                 manufacturer = 'Fortinet'
                 device_type = classifier_device_type(manufacturer,device_type)
                 ssh1.close()
                 adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
-                                manufacturer,
-                                self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
-                                self.management, self.racks)
+                                manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                self.conn_scheme, self.management, self.racks, list_serial_devices, self.stack_enable)
                 result = adding.add_device()
                 return result
             except Exception as err:
@@ -319,8 +400,13 @@ class CONNECT_HANDLER():
                         manufacturer = 'LENOVO'
                         device_type = classifier_device_type(manufacturer,re.findall(r'Flex System Fabric EN4093R 10Gb Scalable Switch', output_name_result))
                         interface_name = 'EXTM'
-                        adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
-                                                   self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
+                        list_serial_devices = []
+                        member_sn = re.findall(r'Serial Number\s+:\s+\S+', output_name_result)[0].split(":")[1].split(".")[0]
+                        list_serial_devices.append({'member_id': 0, 'sn_number': member_sn, 'master': False})
+                        adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
+                                        manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                        self.conn_scheme, self.management, self.racks, list_serial_devices,
+                                        self.stack_enable)
                         result = adding.add_device()
                         return result
             except IndexError as err:
@@ -346,8 +432,14 @@ class CONNECT_HANDLER():
                                 manufacturer = 'Cisco Systems'
                                 device_type = classifier_device_type(manufacturer,re.findall(r'cisco Nexus7700 C7702|cisco Nexus 6001', output_name_result)[0].split("cisco")[1].strip())
                                 interface_name = 'mgmt0'
-                                adding = ADD_NB(device_name, self.site_name,self.location, self.tenants, self.device_role,manufacturer,
-                                                           self.platform, device_type, primary_ip, interface_name,self.conn_scheme,self.management, self.racks)
+                                list_serial_devices = []
+                                serial_number = re.findall(f'Processor board ID \S+', output2)[0].split('Processor board ID ')[1]
+                                list_serial_devices.append({'member_id': 0, 'sn_number': serial_number, 'master': False})
+                                adding = ADD_NB(device_name, self.site_name, self.location, self.tenants,
+                                                self.device_role,
+                                                manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                                self.conn_scheme, self.management, self.racks, list_serial_devices,
+                                                self.stack_enable)
                                 result = adding.add_device()
                                 net_connect.disconnect()
                                 return result
@@ -371,10 +463,12 @@ class CONNECT_HANDLER():
                    primary_ip = (f'{self.ip_conn}/{self.mask}')
                    interface_name = "VirtInt"
                    device_name = f'AWMP_{self.ip_conn}'
+                   list_serial_devices = []
+                   list_serial_devices.append({'member_id': 0, 'sn_number': "NNNNNNN000000", 'master': False})
                    adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
-                                   manufacturer,
-                                   self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
-                                   self.management, self.racks)
+                                   manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                   self.conn_scheme, self.management, self.racks, list_serial_devices,
+                                   self.stack_enable)
                    result = adding.add_device()
                    return result
                except Exception as err:
@@ -396,10 +490,12 @@ class CONNECT_HANDLER():
                     output_device_type = net_connect.send_command('cat /etc/issue', delay_factor=.5, expect_string="#")
                     manufacturer = 'Meinberg Funkuhren GmbH & Co. KG'
                     device_type = classifier_device_type(manufacturer, re.findall(r'Meinberg LANTIME OS7|Ubuntu', output_device_type)[0])
+                    list_serial_devices = []
+                    list_serial_devices.append({'member_id': 0, 'sn_number': "NNNNNNN000000", 'master': False})
                     adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
-                                    manufacturer,
-                                    self.platform, device_type, primary_ip, interface_name, self.conn_scheme,
-                                    self.management, self.racks)
+                                    manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                    self.conn_scheme, self.management, self.racks, list_serial_devices,
+                                    self.stack_enable)
                     result = adding.add_device()
                     return result
 

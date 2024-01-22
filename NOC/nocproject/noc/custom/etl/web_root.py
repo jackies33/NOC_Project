@@ -92,11 +92,11 @@ def classifier_and_executor(event,time1,target,data_device_id,data_device_create
             split_time = time1.split('.')[0]
             dt_create = datetime.datetime.strptime(split_create1, "%Y-%m-%dT%H:%M:%S")
             dt_wh = datetime.datetime.strptime(split_time, "%Y-%m-%d %H:%M:%S")
-            dt_count = dt_create + datetime.timedelta(seconds=30)
-            #find out if an "update" has arrived (it should be an "update" to create an ip address) within 30 seconds after the "create" event
+            dt_count = dt_create + datetime.timedelta(seconds=40)
+            #find out if an "update" has arrived (it should be an "update" to create an ip address) within 40 seconds after the "create" event
             man_obj = data_device_all['name']
             noc_shell = NOC_SHELL(man_obj)
-            if event == "updated" and target == 'device':
+            if event == "updated" and target == 'device' and primary_ip != None:
                 if dt_wh > dt_count:
                     print('its update')
                     time.sleep(4)
@@ -107,11 +107,18 @@ def classifier_and_executor(event,time1,target,data_device_id,data_device_create
                         if out1 == True:
                             out_complete = noc_shell.put_command_load_update()
                             if out_complete == True:
-                                print(f'Sucessfull update Managed_object - {man_obj} in noc-system')
-                                message = (
-                                    f'Noc.handler[Event_Update Device]\n Device Name - [ {man_obj} ] \n ip_address - [{primary_ip}] \n Time: {datetime.datetime.now()}')
-                                sender = telega_bot(message)
-                                sender.tg_sender()
+                                vc_enable = data_device_all['virtual_chassis']
+                                if vc_enable != None:
+                                    vc_name = vc_enable['name']
+                                    print(f'Sucessfull update Managed_object - {vc_name} in noc-system')
+                                    message = (f'Noc.handler[ "Event_Update Device" ]\n Device Name - [ "{vc_name}" ] \n ip_address - [ "{primary_ip}" ] \n Time: [ "{datetime.datetime.now()}" ]')
+                                    sender = telega_bot(message)
+                                    sender.tg_sender()
+                                else:
+                                    print(f'Sucessfull update Managed_object - {man_obj} in noc-system')
+                                    message = (f'Noc.handler[ "Event_Update Device" ]\n Device Name - [ "{man_obj}" ] \n ip_address - [ "{primary_ip}" ] \n Time: [ "{datetime.datetime.now()}" ]')
+                                    sender = telega_bot(message)
+                                    sender.tg_sender()
 
                                 # put_command_clear_mappings()
                             if out_complete == False:
@@ -132,7 +139,7 @@ def classifier_and_executor(event,time1,target,data_device_id,data_device_create
                             out_complete = noc_shell.put_command_load_add()
                             if out_complete == True:
                                 print(f'Sucessfull load Managed_object - {man_obj} in noc-system')
-                                message = (f'Noc.handler[Event_Add Device]\n Device Name - [ {man_obj} ] \n ip_address - [{primary_ip}] \n Time: {datetime.datetime.now()}')
+                                message = (f'Noc.handler[ "Event_Add Device" ]\n Device Name - [ "{man_obj}" ] \n ip_address - [ "{primary_ip}" ] \n Time: [ "{datetime.datetime.now()}" ]')
                                 sender=telega_bot(message)
                                 sender.tg_sender()
 
@@ -144,18 +151,38 @@ def classifier_and_executor(event,time1,target,data_device_id,data_device_create
                     elif out == False:
                         print(f"Not success extract - {man_obj} !!!")
 
-            if event == "created" and target == 'device':
+            elif event == "created" and target == 'device':
                 print(f"need a check for update Managed_object - {man_obj}!!!")
-            if event == "deleted" and target == 'device':
-                print(f"check deleted Managed_object - {man_obj}")
-                out_delete = noc_shell.put_command_wipe()
-                if out_delete == True:
-                    message = (f'Noc.handler[Event_Delete Device]\n Device Name - [ {man_obj} ] \n ip_address - [{primary_ip}] \n Time: {datetime.datetime.now()}')
+            elif event == "deleted" and target == 'device' and primary_ip != None:
+                vc_enable = data_device_all['virtual_chassis']
+                if vc_enable != None:
+                    vc_name = vc_enable['name']
+                    print(f"check deleted Managed_object - {vc_name}")
+                    message = (f'Netbox.handler[ "Event_Delete Device" ]\n Device Name - [ "{man_obj}" ] \n ip_address - [ "{primary_ip}" ] \n Time: [ "{datetime.datetime.now()}" ]')
                     sender = telega_bot(message)
                     sender.tg_sender()
-                elif out_delete == False:
-                    print(f'Not success delete Managed_object - {man_obj} !!!!')
-
+                    noc_shell = NOC_SHELL(vc_name)
+                    out_delete = noc_shell.put_command_wipe()
+                    if out_delete == True:
+                        message = (f'Noc.handler[ "Event_Delete Device" ]\n Device Name - [ "{vc_name}" ] \n ip_address - [ "{primary_ip}" ] \n Time: [ "{datetime.datetime.now()}" ]')
+                        sender = telega_bot(message)
+                        sender.tg_sender()
+                    elif out_delete == False:
+                        print(f'Not success delete Managed_object - {vc_name} !!!!')
+                else:
+                    print(f"check deleted Managed_object - {man_obj}")
+                    message = (f'Netbox.handler[ "Event_Delete Device" ]\n Device Name - [ "{man_obj}" ] \n ip_address - [ "{primary_ip}" ] \n Time: [ "{datetime.datetime.now()}" ]')
+                    sender = telega_bot(message)
+                    sender.tg_sender()
+                    out_delete = noc_shell.put_command_wipe()
+                    if out_delete == True:
+                        message = (f'Noc.handler[ "Event_Delete Device" ]\n Device Name - [ "{man_obj}" ] \n ip_address - [ "{primary_ip}" ] \n Time: [ "{datetime.datetime.now()}" ]')
+                        sender = telega_bot(message)
+                        sender.tg_sender()
+                    elif out_delete == False:
+                        print(f'Not success delete Managed_object - {man_obj} !!!!')
+            else:
+                pass
 
 if __name__ == '__main__':
     app.run(host='10.50.74.171', port=3501)
