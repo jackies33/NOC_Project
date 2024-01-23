@@ -77,7 +77,6 @@ class CONNECT_HANDLER():
                     "password": password,
                     "device_type": type_device_for_conn,
                     "global_delay_factor": 3,
-                    "port": 23
                 }
             return host1
 
@@ -159,7 +158,87 @@ class CONNECT_HANDLER():
 
                except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
-                    return [False, err]
+                    type_device_for_conn = 'huawei_telnet'
+                    host1 = self.template_conn(self.ip_conn, type_device_for_conn, 'telnet')
+
+                    try:
+
+                        with ConnectHandler(**host1) as net_connect:
+                            primary_ip = (f'{self.ip_conn}/{self.mask}')
+                            output_name_result = net_connect.send_command(
+                                'display current-configuration | include sysname',
+                                delay_factor=.5)  # command result
+                            device_name = re.findall(r"sysname \S+", output_name_result)[0].split('sysname ')[1]
+                            output_version = net_connect.send_command('display version',
+                                                                      delay_factor=.5)
+                            command_ip = (f'display ip interface brief  | include {self.ip_conn}')
+                            output_ip = net_connect.send_command(command_ip, delay_factor=.5)
+                            escaped_ip_address = re.escape(self.ip_conn)
+                            re_ip = (f"(\S+)\s+{escaped_ip_address}")
+                            interface_name = re.findall(re_ip, output_ip)[0]
+                            manufacturer = 'Huawei Technologies Co.'
+                            device_type = classifier_device_type(manufacturer,
+                                                                 re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q'
+                                                                            r'|S5700-28C-EI-24S|S5735-S48S4X|CE8851-32CQ8DQ-P|CE6881-48S6CQ',
+                                                                            output_version)[0])
+                            # print(device_name,device_type,interface_name)
+                            net_connect.disconnect()
+
+                            list_serial_devices = []
+                            if self.stack_enable == True:
+                                output_stack = net_connect.send_command('display stack', delay_factor=.5)
+                                slave_output = re.findall(r"\d\s+Slave", output_stack)
+                                standby_output = re.findall(r"\d\s+Standby", output_stack)
+                                master_output = re.findall(r"\d\s+Master", output_stack)
+                                for slave in slave_output:
+                                    member_id = slave.replace(" ", "").split('Slave')[0]
+                                    list_serial_devices.append(
+                                        {'member_id': member_id, 'sn_number': '', 'master': False})
+                                for standby in standby_output:
+                                    member_id = standby.replace(" ", "").split('Standby')[0]
+                                    list_serial_devices.append(
+                                        {'member_id': member_id, 'sn_number': '', 'master': False})
+                                for master in master_output:
+                                    member_id = master.replace(" ", "").split('Master')[0]
+                                    list_serial_devices.append(
+                                        {'member_id': member_id, 'sn_number': '', 'master': True})
+                                output_manufacturer = net_connect.send_command('display device manufacture-info',
+                                                                               delay_factor=.5)
+                                member_output = re.findall(f'^\d\s+-\s+\S+', output_manufacturer, re.MULTILINE)
+                                for member in member_output:
+                                    member_id = re.findall(r'\d\s+-\s+', member)[0].replace(" ", "")[0]
+                                    member_sn = re.findall(r'-\s+\S+', member)[0].replace(" ", "").split("-")[1]
+                                    for l in list_serial_devices:
+                                        if l['member_id'] == member_id:
+                                            l['sn_number'] = member_sn
+
+                            elif self.stack_enable == False:
+                                output_sn_main = net_connect.send_command('display device manufacture-info',
+                                                                          delay_factor=.5)
+                                if "Error" in output_sn_main:
+                                    output_sn_main = net_connect.send_command('display esn', delay_factor=.5)
+                                    member_sn = re.findall(f'ESN.+:\s+\S+', output_sn_main)[0].split(':')[1].replace(
+                                        " ", "")
+                                    list_serial_devices.append(
+                                        {'member_id': 0, 'sn_number': member_sn, 'master': False})
+                                else:
+                                    member_output = re.findall(f'^\d\s+-\s+\S+', output_sn_main, re.MULTILINE)
+                                    for member in member_output:
+                                        member_sn = \
+                                        re.findall(r'\d\s+-\s+\S+', output_sn_main)[0].replace(" ", "").split("-")[1]
+                                        list_serial_devices.append(
+                                            {'member_id': 0, 'sn_number': member_sn, 'master': False})
+
+                            adding = ADD_NB(device_name, self.site_name, self.location, self.tenants,
+                                            self.device_role,
+                                            manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                            self.conn_scheme, self.management, self.racks, list_serial_devices,
+                                            self.stack_enable)
+                            result = adding.add_device()
+                            return result
+                    except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
+                        print('\n\n not connect to ' + self.ip_conn + '\n\n')
+                        return [False, err]
                except Exception as err:
                    print(f"Error {err}")
                    return [False, err]
@@ -319,8 +398,68 @@ class CONNECT_HANDLER():
                                 return result
 
                except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
-                    print('\n\n not connect to ' + self.ip_conn + '\n\n')
-                    return [False, err]
+                    print('\n\n not connect to (with ssh)' + self.ip_conn + '\n\n')
+                    type_device_for_conn = "cisco_ios_telnet"
+                    host1 = self.template_conn(self.ip_conn, type_device_for_conn, 'telnet')
+                    try:
+                        with ConnectHandler(**host1) as net_connect:
+                            primary_ip = (f'{self.ip_conn}/{self.mask}')
+                            output_main = net_connect.send_command('show version', delay_factor=.5)
+                            device_name = re.findall(f"\S+ uptime is", output_main)[0].split("uptime is")[0].strip()
+                            manufacturer = 'Cisco Systems'
+                            device_type = classifier_device_type(manufacturer,
+                                                                 re.findall(f"^cisco \S+", output_main, re.MULTILINE)[
+                                                                     0].split("cisco")[1].strip())
+                            output_interface_name = net_connect.send_command(
+                                f'show ip interface brief | include {self.ip_conn}', delay_factor=.5)
+                            interface_name = \
+                            re.findall(f"^\S+\s+{self.ip_conn}", output_interface_name, re.MULTILINE)[0].split(
+                                self.ip_conn)[0].strip()
+                            list_serial_devices = []
+                            if self.stack_enable == True:
+                                output_switch = net_connect.send_command('show switch', delay_factor=.5)
+                                member_output = re.findall(r"\d\s+Member \S+", output_switch)
+                                master_output = re.findall(r"\d\s+Master \S+", output_switch)[0]
+                                for member in member_output:
+                                    member_id = member.replace(" ", "").split('Member')[0]
+                                    list_serial_devices.append(
+                                        {'member_id': member_id, 'sn_number': '',
+                                         'master': False})
+
+                                master_id = master_output.replace(" ", "").split('Master')[0]
+                                list_serial_devices.append(
+                                    {'member_id': master_id, 'sn_number': '',
+                                     'master': True})
+
+                                output_inventory = net_connect.send_command('show inventory', delay_factor=.5)
+                                member_output = re.findall(f'^NAME:.+\nPID: {device_type[1]}.+SN: \S+',
+                                                           output_inventory,
+                                                           re.MULTILINE)
+                                for member in member_output:
+                                    member_id = re.findall(r'NAME: "\d"', member)[0].split('NAME: "')[1].split('"')[
+                                        0]
+                                    member_sn = re.findall(r'SN: \S+', member)[0].split('SN: ')[1]
+                                    for l in list_serial_devices:
+                                        if l['member_id'] == member_id:
+                                            l['sn_number'] = member_sn
+
+                            elif self.stack_enable == False:
+                                serial_number = \
+                                re.findall(f'Processor board ID \S+', output_main)[0].split('Processor board ID ')[1]
+                                list_serial_devices.append(
+                                    {'member_id': 0, 'sn_number': serial_number, 'master': False})
+
+                            adding = ADD_NB(device_name, self.site_name, self.location, self.tenants,
+                                            self.device_role,
+                                            manufacturer, self.platform, device_type[0], primary_ip, interface_name,
+                                            self.conn_scheme, self.management, self.racks, list_serial_devices,
+                                            self.stack_enable)
+                            result = adding.add_device()
+                            net_connect.disconnect()
+                            return result
+                    except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
+                        print('\n\n not connect to ' + self.ip_conn + '\n\n')
+                        return [False, err]
                except Exception as err:
                    print(f"Error {err}")
                    return [False, err]
