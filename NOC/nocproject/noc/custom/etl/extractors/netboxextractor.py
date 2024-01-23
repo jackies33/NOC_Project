@@ -255,6 +255,11 @@ class NBManagedObjectExtractor(BaseExtractor):
                         site = device.site.id
                         site = self.nb.dcim.sites.get(id=site)
                         my_address = str(site.physical_address)
+                        vc_enable = device.virtual_chassis
+                        if vc_enable != None:
+                            host_name = str(vc_enable)
+                        else:
+                            pass
 
                         yield ManagedObject(
                             id=host_id,
