@@ -1,8 +1,18 @@
 
 
-from .connect_handler_dif import CONNECT_HANDLER
+
+
+from .preparing import CONNECT_PREPARE
 import pynetbox
 from .my_pass import netbox_url,netbox_api_token
+from .device_types.huawei import HUAWEI_CONN
+from .device_types.juniper import JUNIPER_CONN
+from .device_types.cisco import CISCO_CONN
+from .device_types.fortinet import FORTINET_CONN
+from .device_types.ibm import IBM
+from .device_types.aruba import ARUBA_OS
+from .device_types.linux import LINUX
+
 
 class CONNECT_DEVICE():
 
@@ -26,8 +36,8 @@ class CONNECT_DEVICE():
         def prepare_for_connection(self, *args):
                     ip_conn = self.ip_address.split('/')[0]
                     mask = self.ip_address.split('/')[1]
-                    connecting = CONNECT_HANDLER()
-                    conn_scheme = connecting.check_ssh(ip_conn)
+                    connecting = CONNECT_PREPARE(ip_conn)
+                    conn_scheme = connecting.check_ssh()
                     if conn_scheme == 0:
                         print('No connection to device!!!')
                         return [False, "No connection to device! "]
@@ -45,46 +55,47 @@ class CONNECT_DEVICE():
                     platform_id = int(platform_main.id)
                     result = []
                     if platform == "Huawei.VRP":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,self.site,
+                         connection = HUAWEI_CONN(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_Huawei()
                     if platform == "Juniper.JUNOS":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,self.site,
+                         connection = JUNIPER_CONN(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_Juniper_rpc()
                     if platform == "Cisco.IOS":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,self.site,
+                         connection = CISCO_CONN(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_Cisco_IOS()
                     if platform == "IBM.NOS":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,self.site,
+                         connection = IBM(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_IBM_lenovo_sw()
                     if platform == "Cisco.NXOS":
-                         connection = CONNECT_HANDLER(ip_conn,mask,platform_id,self.site,
+                         connection = CISCO_CONN(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_Cisco_NXOS()
                     if platform == "Aruba.ArubaOS":
-                        connection = CONNECT_HANDLER(ip_conn, mask, platform_id, self.site,
+                        connection = ARUBA_OS(ip_conn, mask, platform_id, self.site,
                                                      self.location,self.device_role,
                                                      self.tenants, conn_scheme,self.racks,self.stack_enable)
                         result = connection.conn_AWMP()
                     if platform == "Fortinet.Fortigate":
-                        connection = CONNECT_HANDLER(ip_conn, mask, platform_id, self.site,
+                        connection = FORTINET_CONN(ip_conn, mask, platform_id, self.site,
                                                      self.location,self.device_role,
                                                      self.tenants, conn_scheme,self.racks,self.stack_enable)
                         result = connection.conn_FortiGate()
                     if platform == "OS.Linux":
-                        connection = CONNECT_HANDLER(ip_conn, mask, platform_id, self.site,
+                        connection = LINUX(ip_conn, mask, platform_id, self.site,
                                                      self.location,self.device_role,
                                                      self.tenants, conn_scheme,self.racks,self.stack_enable)
                         result = connection.conn_OS_Linux()
                     return result
+
 
 
 if __name__ == '__main__':

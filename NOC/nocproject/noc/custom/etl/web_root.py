@@ -92,7 +92,7 @@ def classifier_and_executor(event,time1,target,data_device_id,data_device_create
             split_time = time1.split('.')[0]
             dt_create = datetime.datetime.strptime(split_create1, "%Y-%m-%dT%H:%M:%S")
             dt_wh = datetime.datetime.strptime(split_time, "%Y-%m-%d %H:%M:%S")
-            dt_count = dt_create + datetime.timedelta(seconds=40)
+            dt_count = dt_create + datetime.timedelta(seconds=30)
             #find out if an "update" has arrived (it should be an "update" to create an ip address) within 40 seconds after the "create" event
             man_obj = data_device_all['name']
             noc_shell = NOC_SHELL(man_obj)
@@ -153,7 +153,7 @@ def classifier_and_executor(event,time1,target,data_device_id,data_device_create
 
             elif event == "created" and target == 'device':
                 print(f"need a check for update Managed_object - {man_obj}!!!")
-            elif event == "deleted" and target == 'device' and primary_ip != None:
+            elif event == "deleted" and target == 'device':
                 vc_enable = data_device_all['virtual_chassis']
                 if vc_enable != None:
                     vc_name = vc_enable['name']
