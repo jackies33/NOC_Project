@@ -50,7 +50,7 @@ class Add_Device_Active_View(generic.TemplateView):
                 racks = None
 
             device_connect = CONNECT_DEVICE(str(ip_address),int(platform),
-                                            int(device_role),int(tenants),int(site), int(location), racks, stack_enable)
+                                            int(device_role),int(tenants),int(site), location, racks, stack_enable)
             connecting = device_connect.prepare_for_connection()
             #location_id = form.cleaned_data['location'].id
             #print(data)
@@ -119,7 +119,7 @@ class Add_Device_Offline_View(generic.TemplateView):
                 print(err)
                 racks = None
 
-            adding = OFFLINE_DEV(str(device_name), int(site), int(location), int(tenants), int(device_role), str(manufacturer),
+            adding = OFFLINE_DEV(str(device_name), int(site), location, int(tenants), int(device_role), str(manufacturer),
                             int(platform), int(device_type), str(ip_address), str(interface_name), conn_scheme, int(management),
                             racks)
             connecting = adding.offline_preparing()
