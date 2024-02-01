@@ -51,6 +51,7 @@ class MONGO():
           collection = db['noc.alarms.active']
           find = collection.find()
           fault_alarm_class = "6581576d97e47894dd6a890f"
+          link_fault_alarm_class = "6581576e97e47894dd6a89f4"
           input_list = []
           if find != []:
               for dict in find:
@@ -58,8 +59,10 @@ class MONGO():
                   alarm = str(dict["alarm_class"])
                   if alarm == fault_alarm_class:
                        alarm_dict = {"obj_id":moname,"obj_result":1}
+                  elif alarm == link_fault_alarm_class:
+                       alarm_dict = {"obj_id": moname, "obj_result": 2}
                   else:
-                       alarm_dict = {"obj_id":moname,"obj_result":2}
+                       alarm_dict = {"obj_id": moname, "obj_result": 3}
                   input_list.append(alarm_dict)
           else:
               pass

@@ -11,6 +11,7 @@ from .offline_device import OFFLINE_DEV
 
 
 class Add_Device_Active_View(generic.TemplateView):
+    print("<<< Start views.py >>>")
     template_success = 'fast_add_device/active_success.html'
     template_main_active = 'fast_add_device/main_active.html'
     template_bad_result = 'fast_add_device/bad_result_active.html'
@@ -76,6 +77,7 @@ class Add_Device_Active_View(generic.TemplateView):
 
 
 class Add_Device_Offline_View(generic.TemplateView):
+    print("<<< Start views.py >>>")
     template_success = 'fast_add_device/offline_success.html'
     template_main_offline = 'fast_add_device/main_offline.html'
     template_bad_result = 'fast_add_device/bad_result_offline.html'

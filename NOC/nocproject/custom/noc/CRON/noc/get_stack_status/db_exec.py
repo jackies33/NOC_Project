@@ -117,18 +117,25 @@ class CH():
              timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
              query = "INSERT INTO stack (date, ts, metric_type, managed_object, member_name, member_id, status) VALUES "
              for data in self.mylist:
-                 member = data["obj_target"]
-                 managed_object = data["obj_bi_id"]
-                 for mem in member:
-                     member = mem.keys()
-                     stat = mem.values()
-                     for m, s in zip(member, stat):
-                         member_name = m
-                         member_id = int(re.findall(r"Member_id:\d+", member_name)[0].split("Member_id:")[1])
-                         status = int(s)
-                         query += "".join(f"('{date}','{timenow}','',{managed_object}, '{member_name}', '{member_id}', {status}),")
+                 try:
+                     member = data["obj_target"]
+                     managed_object = data["obj_bi_id"]
+                     for mem in member:
+                         member = mem.keys()
+                         stat = mem.values()
+                         for m, s in zip(member, stat):
+                             member_name = m
+                             member_id = int(re.findall(r"Member_id:\d+", member_name)[0].split("Member_id:")[1])
+                             status = int(s)
+                             query += "".join(f"('{date}','{timenow}','',{managed_object}, '{member_name}', '{member_id}', {status}),")
+                 except Exception as err:
+                     logging.warning(f'________\n\n\n{datetime.now()}   ----   {err}\n\n\n_________')
              query = query.rstrip(",")
              query = (f"{query};")
+             #print(query)
+             #tz = timezone('Europe/Moscow')
+             #timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
+             #print(timenow)
              cursor1.execute(query)
              results1 = cursor1.fetchall()
              #for row1,row2 in zip(results1,results2):

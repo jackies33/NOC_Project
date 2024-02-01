@@ -43,7 +43,8 @@ class ADD_NB():
 
 
         def add_device(self,*args):
-           # print('this is add_device.py!!!!')
+            print("<<< Start add_device.py >>>")
+            # print('this is add_device.py!!!!')
 
             # conn_scheme,str(management[1].lower))
             if self.management == 1:
@@ -87,8 +88,8 @@ class ADD_NB():
             print(type(self.platform))
             print(self.racks)
             print(type(self.racks))
-            """
 
+            """
             #print(self.name_device, site, self.location, self.tenants, self.device_role,
                  # self.manufacturer, self.platform, self.device_type,
                  # self.primary_ip, self.interface_name, self.conn_scheme, self.management)
@@ -136,8 +137,11 @@ class ADD_NB():
                     print(f'Error for create an ip_address {err}')
                     return [False, err]
                 time.sleep(1)
-                sn = self.list_serial_devices[0]['sn_number']
-                id_device.update({'serial': sn})
+                try:
+                    sn = self.list_serial_devices[0]['sn_number']
+                    id_device.update({'serial': sn})
+                except Exception as err:
+                    print(f'Error for create an ip_address {err}')
                 if self.location != None:
                     id_device.update({'location': self.location})
                 else:

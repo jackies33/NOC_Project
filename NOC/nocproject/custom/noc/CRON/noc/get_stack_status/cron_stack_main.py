@@ -1,4 +1,7 @@
 
+
+from datetime import datetime
+from pytz import timezone
 import schedule
 import time
 from db_exec import PSQL_CONN,MONGO,CH
@@ -93,6 +96,9 @@ class INVENTORY():
                     obj_prof_id = r[3]
                     obj_bi_id = r[4]
                     obj_vendor_id = r[5]
+                    for check in vendor_dict:
+                        if check == None:
+                            vendor_dict.remove(check)
                     for d in vendor_dict:
                         if obj_vendor_id == d['id']:
                             obj_vendor = d['name']
@@ -113,7 +119,11 @@ def executer_run():
     #huawei_list = my_inventory['huawei']
     if juniper_list != []:
         dev_exec = CONNECT_DEVICE(juniper_list)
-        my_list = dev_exec.comm_Juniper()
+        my_list = dev_exec.conn_Juniper()
+        #print(my_list)
+        #tz = timezone('Europe/Moscow')
+        #timenow = datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
+        #print(timenow)
         ch = CH(my_list)
         ch.ch_insert()
     else:
@@ -129,7 +139,7 @@ def executer_run():
     """
 
 int = INVENTORY(profile_list)
-schedule.every(5).minutes.do(executer_run)
+schedule.every(10).minutes.do(executer_run)
 schedule.every(2).hours.do(int.start_job_inventory)
 
 while i == 0:

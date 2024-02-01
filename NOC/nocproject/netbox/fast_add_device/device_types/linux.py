@@ -34,9 +34,11 @@ class LINUX():
 
 
             def conn_OS_Linux(self ,*args):
+                print("<<< Start linux.py >>>")
                 type_device_for_conn = "linux"
                 template = CONNECT_PREPARE(self.ip_conn, type_device_for_conn, self.conn_scheme)
                 host1 = template.template_conn()
+                print("<<< Start linux.py >>>")
                 try:
                     with ConnectHandler(**host1) as net_connect:
                         primary_ip = (f'{self.ip_conn}/{self.mask}')
@@ -49,6 +51,7 @@ class LINUX():
                         output_device_type = net_connect.send_command('cat /etc/issue', delay_factor=.5, expect_string="#")
                         manufacturer = 'Meinberg Funkuhren GmbH & Co. KG'
                         device_type = classifier_device_type(manufacturer, re.findall(r'Meinberg LANTIME OS7|Ubuntu', output_device_type)[0])
+                        print("<<< Start linux.py >>>")
                         list_serial_devices = []
                         list_serial_devices.append({'member_id': 0, 'sn_number': "NNNNNNN000000", 'master': False})
                         adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,

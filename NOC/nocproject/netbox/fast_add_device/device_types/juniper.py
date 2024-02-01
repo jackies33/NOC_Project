@@ -40,7 +40,7 @@ class JUNIPER_CONN():
             def conn_Juniper_rpc(self, *args):
                 # print('this is connect_to_device_juniper!!!!')
                 # host1 = self.template_conn(ip_conn,manufacturer)
-
+                print("<<< Start juniper.py >>>")
                 try:
 
                     primary_ip = (f'{self.ip_conn}/{self.mask}')
@@ -121,18 +121,27 @@ class JUNIPER_CONN():
                         # if vc_mode == 'Enabled':
                         for member in members:
                             member_id = int(member.find('member-id').text)
-                            member_serial_number = member.find('member-serial-number').text
-                            role = member.find('member-role').text
-                            if role == "Master*":
-                                member_role = True
-                            else:
-                                member_role = False
-                            # print(f"Member ID: {member_id}, Serial Status: {member_serial_status}")
-                            memb_count = memb_count + 1
-                            list_serial_devices.append(
-                                {'member_id': member_id, 'sn_number': member_serial_number, 'master': member_role})
+                            member_status = member.find('member-status').text
+                            if member_status == "Prsnt":
+                                member_serial_number = member.find('member-serial-number').text
+                                role = member.find('member-role').text
+                                if role == "Master*":
+                                    member_role = True
+                                else:
+                                    member_role = False
+                                # print(f"Member ID: {member_id}, Serial Status: {member_serial_status}")
+                                memb_count = memb_count + 1
+                                list_serial_devices.append(
+                                    {'member_id': member_id, 'sn_number': member_serial_number, 'master': member_role})
+                            elif member_status == "NotPrsnt":
+                                pass
                         if memb_count == 1:
                             self.stack_enable = False
+                            for l in list_serial_devices:
+                                if l['master'] == True:
+                                    l['master'] = False
+                                else:
+                                    pass
                         elif memb_count > 1:
                             self.stack_enable = True
                     elif self.stack_enable == False:
@@ -140,11 +149,11 @@ class JUNIPER_CONN():
                         serial_number = str(inventory.findtext('.//serial-number'))
                         list_serial_devices.append(
                             {'member_id': 0, 'sn_number': serial_number, 'master': False})
-
                     dev.close()
                     # print('this is connect_to_device_juniper_out!!!!')
-                    manufacturer = 'juniper-networks'
+                    manufacturer = 'Juniper Networks'
                     device_type = classifier_device_type(manufacturer, device_type)
+                    print("<<< Start juniper.py >>>")
                     adding = ADD_NB(device_name, self.site_name, self.location, self.tenants,
                                     self.device_role,
                                     manufacturer, self.platform, device_type[0], primary_ip, interface_name,
@@ -156,7 +165,9 @@ class JUNIPER_CONN():
 
                 except (ConnectAuthError, ConnectClosedError, ConnectError, ConnectTimeoutError) as err:  # exceptions
                             #if rpc bad result - try to connect directly throuh ssh(paramiko)
+
                             print('\n\n not connect to ' + self.ip_conn + f'\n\n {err}')
+                            print("<<< Start juniper.py >>>")
                             primary_ip = (f'{self.ip_conn}/{self.mask}')
                             cmnd1 = '\n show version \n\n      '  # Commands
                             cmnd2 = f'\n show configuration | display set| match {self.ip_conn}  \n\n           '  # Commands
@@ -196,6 +207,7 @@ class JUNIPER_CONN():
                                 manufacturer = 'juniper-networks'
                                 device_type = classifier_device_type(manufacturer,
                                                                      re.findall(r'Model: \S+', output1)[0].split('Model: ')[1].upper())
+                                print("<<< Start juniper.py >>>")
                                 interface_first = \
                                     re.findall(r'set interfaces \S+', output1, re.MULTILINE)[0].split('set interfaces ')[1]
                                 inetrface_count = \

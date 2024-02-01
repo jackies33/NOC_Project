@@ -2,6 +2,7 @@
 
 
 
+
 from .preparing import CONNECT_PREPARE
 import pynetbox
 from .my_pass import netbox_url,netbox_api_token
@@ -12,6 +13,7 @@ from .device_types.fortinet import FORTINET_CONN
 from .device_types.ibm import IBM
 from .device_types.aruba import ARUBA_OS
 from .device_types.linux import LINUX
+from .device_types.hpe import HPProCurve9xxx
 
 
 class CONNECT_DEVICE():
@@ -34,10 +36,13 @@ class CONNECT_DEVICE():
 
 
         def prepare_for_connection(self, *args):
+
+                    print("<<< Start connect_to_device.py >>>")
                     ip_conn = self.ip_address.split('/')[0]
                     mask = self.ip_address.split('/')[1]
                     connecting = CONNECT_PREPARE(ip_conn)
                     conn_scheme = connecting.check_ssh()
+                    print("<<< Start connect_to_device.py >>>")
                     if conn_scheme == 0:
                         print('No connection to device!!!')
                         return [False, "No connection to device! "]
@@ -59,41 +64,51 @@ class CONNECT_DEVICE():
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_Huawei()
-                    if platform == "Juniper.JUNOS":
+                    elif platform == "Juniper.JUNOS":
                          connection = JUNIPER_CONN(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_Juniper_rpc()
-                    if platform == "Cisco.IOS":
+                    elif platform == "Cisco.IOS":
                          connection = CISCO_CONN(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_Cisco_IOS()
-                    if platform == "IBM.NOS":
+                    elif platform == "Cisco.IOSXR":
+                         connection = CISCO_CONN(ip_conn,mask,platform_id,self.site,
+                                                      self.location,self.device_role,
+                                                      self.tenants,conn_scheme,self.racks,self.stack_enable)
+                         result = connection.conn_Cisco_IOS_XR()
+                    elif platform == "IBM.NOS":
                          connection = IBM(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_IBM_lenovo_sw()
-                    if platform == "Cisco.NXOS":
+                    elif platform == "Cisco.NXOS":
                          connection = CISCO_CONN(ip_conn,mask,platform_id,self.site,
                                                       self.location,self.device_role,
                                                       self.tenants,conn_scheme,self.racks,self.stack_enable)
                          result = connection.conn_Cisco_NXOS()
-                    if platform == "Aruba.ArubaOS":
+                    elif platform == "Aruba.ArubaOS":
                         connection = ARUBA_OS(ip_conn, mask, platform_id, self.site,
                                                      self.location,self.device_role,
                                                      self.tenants, conn_scheme,self.racks,self.stack_enable)
                         result = connection.conn_AWMP()
-                    if platform == "Fortinet.Fortigate":
+                    elif platform == "Fortinet.Fortigate":
                         connection = FORTINET_CONN(ip_conn, mask, platform_id, self.site,
                                                      self.location,self.device_role,
                                                      self.tenants, conn_scheme,self.racks,self.stack_enable)
                         result = connection.conn_FortiGate()
-                    if platform == "OS.Linux":
+                    elif platform == "OS.Linux":
                         connection = LINUX(ip_conn, mask, platform_id, self.site,
                                                      self.location,self.device_role,
                                                      self.tenants, conn_scheme,self.racks,self.stack_enable)
                         result = connection.conn_OS_Linux()
+                    elif platform == "HP.ProCurve9xxx":
+                        connection = HPProCurve9xxx(ip_conn, mask, platform_id, self.site,
+                                           self.location, self.device_role,
+                                           self.tenants, conn_scheme, self.racks, self.stack_enable)
+                        result = connection.conn_ProCurve9xxx()
                     return result
 
 
