@@ -33,10 +33,9 @@ class OFFLINE_DEV():
 
 
     def offline_preparing(self, *args):
-
+                print("<<< Start offline_device.py >>>")
                 nb = pynetbox.api(url=netbox_url, token=netbox_api_token)
                 nb.http_session.verify = False
-
                 adding = ADD_NB(self.device_name, self.site, self.location, self.tenants, self.device_role,
                                 self.manufacturer,
                                 self.platform, self.device_type, self.ip_address, self.interface_name, self.conn_scheme,

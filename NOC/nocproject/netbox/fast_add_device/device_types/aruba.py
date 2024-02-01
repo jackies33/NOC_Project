@@ -33,7 +33,7 @@ class ARUBA_OS():
 
 
             def conn_AWMP(self ,*args):
-
+                print("<<< Start aruba.py >>>")
                 airwave = AirWaveAPIClient(username=mylogin, password=mypass, url=f'https://{self.ip_conn}')
                 try:
                     airwave.login()
@@ -42,6 +42,7 @@ class ARUBA_OS():
                     device_type = classifier_device_type(manufacturer
                                                          ,re.findall("<name>.*</name>", output)[0].split('<name>')[1].split
                                                              ('</name>'))
+                    print("<<< Start aruba.py >>>")
                     primary_ip = (f'{self.ip_conn}/{self.mask}')
                     interface_name = "VirtInt"
                     device_name = f'AWMP_{self.ip_conn}'

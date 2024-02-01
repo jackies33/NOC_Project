@@ -37,11 +37,11 @@ class HUAWEI_CONN():
 
 
             def conn_Huawei(self ,*args):
-
+                print("<<< Start huawei.py >>>")
                 type_device_for_conn = 'huawei'
                 template = CONNECT_PREPARE(self.ip_conn ,type_device_for_conn ,self.conn_scheme)
                 host1 = template.template_conn()
-
+                print("<<< Start huawei.py >>>")
                 try:
 
                     with ConnectHandler(**host1) as net_connect:
@@ -57,11 +57,13 @@ class HUAWEI_CONN():
                         re_ip = (f"(\S+)\s+{escaped_ip_address}")
                         interface_name = re.findall(re_ip, output_ip)[0]
                         manufacturer = 'Huawei Technologies Co.'
-                        device_type = classifier_device_type(manufacturer ,re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q'
-                                                                                     r'|S5700-28C-EI-24S|S5735-S48S4X|CE8851-32CQ8DQ-P|CE6881-48S6CQ', output_version)[0])
-                        # print(device_name,device_type,interface_name)
-                        net_connect.disconnect()
-
+                        #device_type = classifier_device_type(manufacturer ,re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q'
+                        #                                                            r'|S5700-28C-EI-24S|S5735-S48S4X|CE8851-32CQ8DQ-P|CE6881-48S6CQ', output_version)[0])
+                        show_device = net_connect.send_command('display device',delay_factor=.5)
+                        device_type = classifier_device_type(
+                            manufacturer,re.findall(f".+\s+Device status:",
+                                                    show_device, re.MULTILINE)[0].split("Device status:")[0].split("'s")[0].strip())
+                        print("<<< Start huawei.py >>>")
                         list_serial_devices = []
                         if self.stack_enable == True:
                             output_stack = net_connect.send_command('display stack', delay_factor=.5)
@@ -90,19 +92,11 @@ class HUAWEI_CONN():
                                         l['sn_number'] = member_sn
 
                         elif self.stack_enable == False:
-                            output_sn_main = net_connect.send_command('display device manufacture-info', delay_factor=.5)
-                            if "Error" in output_sn_main:
-                                output_sn_main = net_connect.send_command('display esn', delay_factor=.5)
-                                member_sn = re.findall(f'ESN.+:\s+\S+', output_sn_main)[0].split(':')[1].replace(" ", "")
-                                list_serial_devices.append({'member_id': 0, 'sn_number': member_sn, 'master': False})
-                            else:
-                                member_output = re.findall(f'^\d\s+-\s+\S+', output_sn_main, re.MULTILINE)
-                                for member in member_output:
-                                    member_sn = re.findall(r'\d\s+-\s+\S+', output_sn_main)[0].replace(" ", "").split("-")[1]
-                                    list_serial_devices.append(
-                                        {'member_id': 0, 'sn_number': member_sn, 'master': False})
+                            output_sn_main = net_connect.send_command('display elabel', delay_factor=.5)
+                            member_sn = re.findall(f"BarCode=\S+", output_sn_main, re.MULTILINE)[0].split("BarCode=")[1].strip()
+                            list_serial_devices.append({'member_id': 0, 'sn_number': member_sn, 'master': False})
 
-
+                        net_connect.disconnect()
                         adding = ADD_NB(device_name, self.site_name, self.location, self.tenants,
                                         self.device_role,
                                         manufacturer, self.platform, device_type[0], primary_ip, interface_name,
@@ -114,9 +108,11 @@ class HUAWEI_CONN():
 
                 except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
                     print('\n\n not connect to ' + self.ip_conn + '\n\n')
+                    print("<<< Start huawei.py >>>")
                     type_device_for_conn = 'huawei_telnet'
                     template = CONNECT_PREPARE(self.ip_conn, type_device_for_conn, self.conn_scheme)
                     host1 = template.template_conn()
+                    print("<<< Start huawei.py >>>")
 
                     try:
 
@@ -134,13 +130,11 @@ class HUAWEI_CONN():
                             re_ip = (f"(\S+)\s+{escaped_ip_address}")
                             interface_name = re.findall(re_ip, output_ip)[0]
                             manufacturer = 'Huawei Technologies Co.'
-                            device_type = classifier_device_type(manufacturer,
-                                                                 re.findall(r'NE20E-S2F|AR6120|NetEngine 8000 F1A-8H20Q'
-                                                                            r'|S5700-28C-EI-24S|S5735-S48S4X|CE8851-32CQ8DQ-P|CE6881-48S6CQ',
-                                                                            output_version)[0])
-                            # print(device_name,device_type,interface_name)
-                            net_connect.disconnect()
-
+                            device_type = classifier_device_type(
+                                manufacturer, re.findall(f".+\s+Device status:",
+                                                         show_device, re.MULTILINE)[0].split("Device status:")
+                                [0].split("'s")[0].strip())
+                            print("<<< Start huawei.py >>>")
                             list_serial_devices = []
                             if self.stack_enable == True:
                                 output_stack = net_connect.send_command('display stack', delay_factor=.5)
@@ -170,28 +164,19 @@ class HUAWEI_CONN():
                                             l['sn_number'] = member_sn
 
                             elif self.stack_enable == False:
-                                output_sn_main = net_connect.send_command('display device manufacture-info',
-                                                                          delay_factor=.5)
-                                if "Error" in output_sn_main:
-                                    output_sn_main = net_connect.send_command('display esn', delay_factor=.5)
-                                    member_sn = re.findall(f'ESN.+:\s+\S+', output_sn_main)[0].split(':')[1].replace(
-                                        " ", "")
-                                    list_serial_devices.append(
-                                        {'member_id': 0, 'sn_number': member_sn, 'master': False})
-                                else:
-                                    member_output = re.findall(f'^\d\s+-\s+\S+', output_sn_main, re.MULTILINE)
-                                    for member in member_output:
-                                        member_sn = \
-                                            re.findall(r'\d\s+-\s+\S+', output_sn_main)[0].replace(" ", "").split("-")[1]
-                                        list_serial_devices.append(
-                                            {'member_id': 0, 'sn_number': member_sn, 'master': False})
+                                output_sn_main = net_connect.send_command('display elabel', delay_factor=.5)
+                                member_sn = \
+                                re.findall(f"BarCode=\S+", output_sn_main, re.MULTILINE)[0].split("BarCode=")[1].strip()
+                                list_serial_devices.append({'member_id': 0, 'sn_number': member_sn, 'master': False})
 
+                            net_connect.disconnect()
                             adding = ADD_NB(device_name, self.site_name, self.location, self.tenants,
                                             self.device_role,
                                             manufacturer, self.platform, device_type[0], primary_ip, interface_name,
                                             self.conn_scheme, self.management, self.racks, list_serial_devices,
                                             self.stack_enable)
                             result = adding.add_device()
+
                             return result
                     except (NetMikoAuthenticationException, NetMikoTimeoutException) as err:  # exceptions
                         print('\n\n not connect to ' + self.ip_conn + '\n\n')

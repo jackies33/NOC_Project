@@ -37,6 +37,7 @@ class ADD_NB_VC():
                 self.stack_enable = stack_enable
 
             def add_vc(self, *args):
+                print("<<< Start add_virtual_chassis.py >>>")
                 nb = pynetbox.api(url=netbox_url,
                                   token=netbox_api_token)
                 nb.http_session.verify = False
@@ -172,11 +173,11 @@ class ADD_NB_VC():
                                 return [False, err]
                             else:
                                 print(f"Succesfull create and update device - {host_name} and send to telegram chat")
-                                message = (
-                                    f'Netbox.handler [ "Event_Add Device_Stack" ]\n Device_Stack Name - [ "{host_name}" ] '
-                                    f'\n ip_address - [ "None" ] \n Time: [ "{datetime.datetime.now()}" ]')
-                                sender = tg_bot(message)
-                                sender.tg_sender()
+                                #message = (
+                                #    f'Netbox.handler [ "Event_Add Device_Stack" ]\n Device_Stack Name - [ "{host_name}" ] '
+                                #    f'\n ip_address - [ "None" ] \n Time: [ "{datetime.datetime.now()}" ]')
+                                #sender = tg_bot(message)
+                                #sender.tg_sender()
                             stack_amount = stack_amount + f' "{host_name}"'
 
                     except Exception as err:

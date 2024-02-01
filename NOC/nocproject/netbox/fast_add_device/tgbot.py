@@ -12,7 +12,7 @@ class tg_bot():
         self.message = message
 
     def tg_sender(self,*args):
-
+                print("<<< Start tgbot.py >>>")
                 try:
                     url = f"https://api.telegram.org/bot{self.tg_token}/sendMessage?chat_id={self.chat_id}&text={self.message}"
                     requests.get(url).json()

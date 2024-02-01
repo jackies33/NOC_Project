@@ -37,7 +37,7 @@ class FORTINET_CONN():
 
 
             def conn_FortiGate(self, *args):
-
+                print("<<< Start fortinet.py >>>")
                 primary_ip = (f'{self.ip_conn}/{self.mask}')
                 cmnd1 = '\n config global \n\n      '  # Commands
                 cmnd2 = '\n get system status  \n\n           '  # Commands
@@ -72,6 +72,7 @@ class FORTINET_CONN():
                     list_serial_devices.append({'member_id': 0, 'sn_number': member_sn, 'master': False})
                     manufacturer = 'Fortinet'
                     device_type = classifier_device_type(manufacturer ,device_type)
+                    print("<<< Start fortinet.py >>>")
                     ssh1.close()
                     adding = ADD_NB(device_name, self.site_name, self.location, self.tenants, self.device_role,
                                     manufacturer, self.platform, device_type[0], primary_ip, interface_name,

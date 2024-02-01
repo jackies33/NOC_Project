@@ -15,7 +15,7 @@ setup(
     license='Nginx',
     install_requires=[],
     packages=["fast_add_device"],
-    package_data={"fast_add_device": ["templates/fast_add_device/*.html"]},
+    package_data={"fast_add_device": ["templates/fast_add_device/*.html","device_types/*"]},
     zip_safe=False
 )
 

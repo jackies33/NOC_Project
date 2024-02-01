@@ -40,6 +40,7 @@ class IBM():
 
 
             def conn_IBM_lenovo_sw(self ,*args):
+                print("<<< Start ibm.py >>>")
                 primary_ip = (f'{self.ip_conn}/{self.mask}')
                 ssh = paramiko.SSHClient()
                 ssh.load_system_host_keys()
@@ -66,6 +67,7 @@ class IBM():
                     manufacturer = 'LENOVO'
                     device_type = classifier_device_type(manufacturer
                                                          ,re.findall(r'Flex System Fabric EN4093R 10Gb Scalable Switch', output_name_result))
+                    print("<<< Start ibm.py >>>")
                     interface_name = 'EXTM'
                     list_serial_devices = []
                     member_sn = re.findall(r'Serial Number\s+:\s+\S+', output_name_result)[0].split(":")[1].split(".")[0]

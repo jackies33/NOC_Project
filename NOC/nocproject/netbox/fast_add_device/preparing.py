@@ -17,6 +17,7 @@ class CONNECT_PREPARE():
 
 
         def check_ssh(self, *args):
+            print("<<< Start preparing.py >>>")
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex((self.ip_conn, 22))
             scheme = 0
@@ -32,7 +33,8 @@ class CONNECT_PREPARE():
             return scheme
 
         def template_conn(self, *args):
-            if self.conn_scheme == "ssh":
+            print("<<< Start preparing.py >>>")
+            if self.conn_scheme == "ssh" and self.type_device_for_conn != "hp_procurve":
                 host1 = {
 
                     "host": self.ip_conn,
@@ -41,6 +43,17 @@ class CONNECT_PREPARE():
                     "device_type": self.type_device_for_conn,
                     "global_delay_factor": 0.5,
                 }
+            elif  self.conn_scheme == "ssh" and self.type_device_for_conn == "hp_procurve":
+                host1 = {
+
+                        "host": self.ip_conn,
+                        "username": mylogin,
+                        "password": mypass,
+                        "device_type": self.type_device_for_conn,
+                        "global_delay_factor": 3,
+                        "secret": mypass,
+                }
+
             else:
                 host1 = {
 
@@ -50,5 +63,6 @@ class CONNECT_PREPARE():
                     "device_type": self.type_device_for_conn,
                     "global_delay_factor": 3,
                 }
+
             return host1
 
