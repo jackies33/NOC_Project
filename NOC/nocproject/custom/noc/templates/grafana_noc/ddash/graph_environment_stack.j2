@@ -1,0 +1,126 @@
+{
+  "id": 1151604870714532,
+  "gridPos": {
+    "x": 0,
+    "y": 19,
+    "w": 12,
+    "h": 7
+  },
+  "type": "timeseries",
+  "title": "Environment | Stack",
+  "pluginVersion": "8.4.6",
+  "links": [],
+  "targets": [
+    {
+      "resultFormat": "time_series",
+      "intervalFactor": 1,
+      "query": "SELECT \n    t, \n    groupArray((member_name, Status)) AS groupArr \nFROM (\n    SELECT $timeSeries as t, \n        member_name, \n        min(status) as `Status` \n    FROM \n        $table \n    WHERE \n        managed_object=$bi_id \n        and $timeFilter\n    GROUP BY member_name, t ORDER BY t) \nGROUP BY t \nORDER BY t",
+      "refId": "A",
+      "database": "noc",
+      "tableLoading": false,
+      "table": "stack",
+      "dateLoading": false,
+      "datetimeLoading": false,
+      "dateColDataType": "date",
+      "dateTimeColDataType": "ts",
+      "datasource": {
+        "type": "vertamedia-clickhouse-datasource",
+        "uid": "PAC5427CE0D9D09D1"
+      },
+      "format": "time_series",
+      "extrapolate": true,
+      "skip_comments": true,
+      "dateTimeType": "DATETIME",
+      "round": "0s",
+      "formattedQuery": "SELECT \n    t, \n    groupArray((member_name, Status)) AS groupArr \nFROM (\n    SELECT $timeSeries as t, \n        member_name, \n        avg(status) as `Status` \n    FROM \n        $table \n    WHERE \n        managed_object=$bi_id \n        and $timeFilter\n    GROUP BY member_name, t ORDER BY t) \nGROUP BY t \nORDER BY t",
+      "rawQuery": "SELECT \n    t, \n    groupArray((member_name, Status)) AS groupArr \nFROM (\n    SELECT (intDiv(toUInt32(ts), 20) * 20) * 1000 as t, \n        member_name, \n        min(status) as `Status` \n    FROM \n        noc.stack \n    WHERE \n        managed_object=1926171014946576163 \n        and date >= toDate(1700624007) AND date <= toDate(1700645607) AND ts >= toDateTime(1700624007) AND ts <= toDateTime(1700645607)\n    GROUP BY member_name, t ORDER BY t) \nGROUP BY t \nORDER BY t"
+    }
+  ],
+  "timeFrom": null,
+  "timeShift": null,
+  "transparent": true,
+  "fieldConfig": {
+    "defaults": {
+      "custom": {
+        "drawStyle": "line",
+        "lineInterpolation": "linear",
+        "barAlignment": 0,
+        "lineWidth": 2,
+        "fillOpacity": 10,
+        "gradientMode": "hue",
+        "spanNulls": false,
+        "showPoints": "auto",
+        "pointSize": 8,
+        "stacking": {
+          "mode": "percent",
+          "group": "A"
+        },
+        "axisPlacement": "auto",
+        "axisLabel": "",
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "hideFrom": {
+          "tooltip": false,
+          "viz": false,
+          "legend": false
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        },
+        "lineStyle": {
+          "fill": "solid"
+        },
+        "axisGridShow": true
+      },
+      "color": {
+        "mode": "palette-classic"
+      },
+      "mappings": [
+        {
+          "type": "value",
+          "options": {
+            "0": {
+              "text": "Failed",
+              "color": "semi-dark-red",
+              "index": 1
+            },
+            "1": {
+              "text": "OK",
+              "color": "semi-dark-green",
+              "index": 0
+            }
+          }
+        }
+      ],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          }
+        ]
+      },
+      "unit": "string",
+      "min": 0,
+      "max": 2
+    },
+    "overrides": []
+  },
+  "repeat": null,
+  "options": {
+    "tooltip": {
+      "mode": "multi",
+      "sort": "none"
+    },
+    "legend": {
+      "displayMode": "table",
+      "placement": "bottom",
+      "calcs": [
+        "lastNotNull"
+      ]
+    }
+  },
+  "datasource": null
+}

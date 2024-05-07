@@ -1,0 +1,9 @@
+
+{
+  "$metric": "Interface | Status | Admin",
+  "$type": "ifindex",
+  "oid": "1.3.6.1.4.1.39433.1.6.1.5.1.3{{ ifIndex }}",
+  "type": "bool",
+  "scale": "is1"
+}
+

@@ -1,0 +1,27 @@
+
+
+---
+- hosts: main_node_backup
+  become: true
+  tasks:
+    - name: Run clickhouse_exec.py
+      shell: |
+        python3 /opt/custom/db_backup/clickhouse_exec.py | tail -n 1
+      timeout: 1200
+      register: result
+
+    - name: Check result
+      debug:
+        msg: "OK"
+      when: result.stdout == "1"
+
+    - name: Check result
+      debug:
+        msg: "FAIL"
+      when: result.stdout == "0"
+
+    - name: Run tg_bot.py
+      shell: |
+        python3 /opt/ansible/db_backup/tg_bot.py --db_type ClickHouseDB
+      when: result.stdout == "1"
+      delegate_to: localhost

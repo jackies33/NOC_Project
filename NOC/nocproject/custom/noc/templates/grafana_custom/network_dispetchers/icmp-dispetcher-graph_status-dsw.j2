@@ -1,0 +1,118 @@
+
+{
+  "datasource": {
+    "type": "vertamedia-clickhouse-datasource",
+    "uid": "d47b09dd-8997-42b4-8d5e-a1690f23f55a"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "mappings": [
+        {
+          "options": {
+            "1": {
+              "color": "semi-dark-red",
+              "index": 2,
+              "text": "Авария"
+            },
+            "2": {
+              "color": "semi-dark-yellow",
+              "index": 1,
+              "text": "Внимание"
+            },
+            "3": {
+              "color": "semi-dark-green",
+              "index": 0,
+              "text": "ОК"
+            }
+          },
+          "type": "value"
+        }
+      ]
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 28,
+    "w": 24,
+    "x": 0,
+    "y": 32
+  },
+  "id": 3,
+  "options": {
+    "autoSizeColumns": false,
+    "layoutNumColumns": 25,
+    "autoSizeRows": false,
+    "layoutNumRows": 5,
+    "layoutDisplayLimit": 130,
+    "autoSizePolygons": false,
+    "globalPolygonSize": 100,
+    "globalPolygonBorderSize": 160,
+    "globalTextFontFamily": "Roboto",
+    "globalAutoScaleFonts": false,
+    "globalFontSize": 27,
+    "globalTextFontAutoColorEnabled": false,
+    "globalTextFontColor": "#000000",
+    "ellipseEnabled": true,
+    "ellipseCharacters": 16,
+    "sortByDirection": 1,
+    "sortByField": "name",
+    "globalTooltipsEnabled": true,
+    "globalTooltipsFontFamily": "Roboto",
+    "globalTooltipsShowTimestampEnabled": true,
+    "globalShowTooltipColumnHeadersEnabled": true,
+    "tooltipDisplayMode": "all",
+    "tooltipDisplayTextTriggeredEmpty": "OK",
+    "tooltipPrimarySortDirection": 1,
+    "tooltipPrimarySortByField": "thresholdLevel",
+    "tooltipSecondarySortDirection": 1,
+    "tooltipSecondarySortByField": "value",
+    "globalDisplayMode": "all",
+    "globalDisplayTextTriggeredEmpty": "OK",
+    "globalShowValueEnabled": true,
+    "globalShape": "square",
+    "globalGradientsEnabled": true,
+    "globalFillColor": "rgba(10, 85, 161, 1)",
+    "globalPolygonBorderColor": "rgba(0, 0, 0, 0)",
+    "globalUnitFormat": "short",
+    "globalOperator": "mean",
+    "globalDecimals": 2,
+    "globalThresholdsConfig": [],
+    "globalClickthrough": "",
+    "globalClickthroughSanitizedEnabled": true,
+    "globalClickthroughNewTabEnabled": true,
+    "globalClickthroughCustomTargetEnabled": false,
+    "globalClickthroughCustomTarget": "",
+    "globalRegexPattern": "",
+    "overrideConfig": {
+      "overrides": []
+    },
+    "compositeGlobalAliasingEnabled": false,
+    "compositeConfig": {
+      "composites": [],
+      "enabled": true,
+      "animationSpeed": "1500"
+    }
+  },
+  "pluginVersion": "2.1.4",
+  "targets": [
+    {
+      "datasource": {
+        "type": "vertamedia-clickhouse-datasource",
+        "uid": "d47b09dd-8997-42b4-8d5e-a1690f23f55a"
+      },
+      "dateTimeType": "DATETIME",
+      "extrapolate": true,
+      "format": "table",
+      "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
+      "intervalFactor": 1,
+      "query": "\nSELECT mo_name AS MO, status AS \"-\"\nFROM (\n    SELECT mo_name, status,\n           ROW_NUMBER() OVER (PARTITION BY mo_name ORDER BY ts DESC) AS rn\n    FROM noc.disp_icmp\n    WHERE mo_segment = 'm-dsw'\n)\nWHERE rn = 1\nORDER BY mo_name",
+      "rawQuery": "SELECT mo_name AS MO, status AS \"-\"\nFROM (\n    SELECT mo_name, status,\n           ROW_NUMBER() OVER (PARTITION BY mo_name ORDER BY ts DESC) AS rn\n    FROM noc.disp_icmp\n    WHERE mo_segment = 'm-dsw'\n)\nWHERE rn = 1\nORDER BY mo_name",
+      "refId": "A",
+      "round": "0s",
+      "skip_comments": true
+    }
+  ],
+  "title": "Статус dsw мус",
+  "type": "grafana-polystat-panel"
+}
+

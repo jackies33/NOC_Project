@@ -1,0 +1,30 @@
+
+---
+- name: Run script on localhost
+  hosts:
+  gather_facts: false
+  tasks:
+    - name: Run script
+      script: /var/lib/awx/projects/EIMTS/setup_config/juniper/setup_config.py {{ run_devices }}
+      async: 120
+      poll: 0
+      delegate_to: localhost
+
+  vars:
+    ansible_connection: local
+  vars_files:
+    - hosts.yml
+
+
+- name: Run script on multiple hosts.yml
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Run script
+      script: /opt/ansible/awx/projects/run_config/juniper/setup_config.py {{ inventory_hostname }}
+      async: 5
+      poll: 0
+  vars:
+    ansible_connection: local
+  vars_files:
+    - run_devices
