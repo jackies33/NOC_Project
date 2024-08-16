@@ -1,0 +1,216 @@
+
+
+{% macro interface(interface, lindex) -%}
+{
+  "title": "----Load_interface [-b/s]----  ${{interface.type}}----",
+  "aliasColors": {},
+  "bars": false,
+  "internal_comment":"graph_interface_load.j2",
+  "datasource": null,
+  "fill": 1,
+  "grid": {
+    "threshold1": null,
+    "threshold1Color": "rgba(216, 200, 27, 0.27)",
+    "threshold2": null,
+    "threshold2Color": "rgba(234, 112, 112, 0.22)"
+  },
+  "id": {{lindex + 100}},
+  "legend": {
+    "alignAsTable": true,
+    "avg": true,
+    "current": true,
+    "max": true,
+    "min": true,
+    "show": true,
+    "sortDesc": true,
+    "total": false,
+    "values": true
+  },
+  "lines": true,
+  "linewidth": 2,
+  "links": [],
+  "minSpan": 6,
+  "nullPointMode": "connected",
+  "percentage": false,
+  "pointradius": 5,
+  "points": false,
+  "renderer": "flot",
+  "repeat": "{{interface.type}}",
+  "scopedVars": {
+    "{{interface.type}}": {
+      "selected": true,
+      "text": "{{interface.ports[0].name}}({{interface.ports[0].descr}})",
+      "value": "{{interface.ports[0].name}}"
+    }
+  },
+  "seriesOverrides": [
+    {
+      "alias": "Input",
+      "transform": "negative-Y"
+    },
+    {
+      "alias": "Oper status",
+      "yaxis": 2,
+      "fill": 0
+    },
+    {
+      "alias": "Admin status",
+      "yaxis": 2,
+      "fill": 0
+    }
+  ],
+  "span": 12,
+  "stack": false,
+  "steppedLine": false,
+  "targets": [
+    {
+      "intervalFactor": 1,
+      "query": "SELECT $timeSeries as t, argMax(load_in, t) as Input, argMax(load_out, t) as Output, avg(status_oper) as `Oper status`, avg(status_admin) as `Admin status` FROM $table WHERE managed_object = $bi_id and interface=toString(${{interface.type}}) and subinterface == '' and queue = '' and traffic_class = '' and $timeFilter GROUP BY t ORDER BY t",
+      "refId": "A",
+      "resultFormat": "time_series",
+      "database": "{{ noc_db_metrics }}",
+      "tableLoading": false,
+      "table": "interface",
+      "dateLoading": false,
+      "datetimeLoading": false,
+      "dateColDataType": "date",
+      "dateTimeColDataType": "ts",
+      "interval": "$discovery_interval"
+    }
+  ],
+  "timeFrom": null,
+  "timeShift": null,
+  "tooltip": {
+    "msResolution": false,
+    "shared": true,
+    "sort": 0,
+    "value_type": "cumulative"
+  },
+  "type": "graph",
+  "xaxis": {
+    "show": true
+  },
+  "y-axis": true,
+  "yaxes": [
+    {
+      "format": "bps",
+      "label": "bit/s",
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "show": true
+    },
+    {
+      "logBase": 1,
+      "show": true,
+      "max": null,
+      "format": "short",
+      "min": null,
+      "label": null
+    }
+  ]
+},
+{
+  "title": "----Load_interface [%]----   ${{interface.type}}----",
+  "aliasColors": {},
+  "bars": false,
+  "internal_comment":"graph_interface_load.j2",
+  "datasource": null,
+  "fill": 1,
+  "grid": {
+    "threshold1": null,
+    "threshold1Color": "rgba(216, 200, 27, 0.27)",
+    "threshold2": null,
+    "threshold2Color": "rgba(234, 112, 112, 0.22)"
+  },
+  "id": {{lindex + 100}},
+  "legend": {
+    "alignAsTable": true,
+    "avg": true,
+    "current": true,
+    "max": true,
+    "min": true,
+    "show": true,
+    "sortDesc": true,
+    "total": false,
+    "values": true
+  },
+  "lines": true,
+  "linewidth": 2,
+  "links": [],
+  "minSpan": 6,
+  "nullPointMode": "connected",
+  "percentage": false,
+  "pointradius": 5,
+  "points": false,
+  "renderer": "flot",
+  "repeat": "{{interface.type}}",
+  "scopedVars": {
+    "{{interface.type}}": {
+      "selected": true,
+      "text": "{{interface.ports[0].name}}({{interface.ports[0].descr}})",
+      "value": "{{interface.ports[0].name}}"
+    }
+  },
+  "seriesOverrides": [
+    {
+      "alias": "Input",
+      "transform": "negative-Y"
+    },
+  ],
+  "span": 12,
+  "stack": false,
+  "steppedLine": false,
+  "targets": [
+    {
+      "intervalFactor": 1,
+      "query": "SELECT $timeSeries as t,  argMax(load_in, t) / avg(speed) * 100 AS load_in_percentage, argMax(load_out, t) / avg(speed) * 100 AS load_out_percentage FROM $table WHERE managed_object = $bi_id and interface=toString(${{interface.type}}) and subinterface == '' and queue = '' and traffic_class = '' and $timeFilter GROUP BY t ORDER BY t",
+      "refId": "A",
+      "resultFormat": "time_series",
+      "database": "{{ noc_db_metrics }}",
+      "tableLoading": false,
+      "table": "interface",
+      "dateLoading": false,
+      "datetimeLoading": false,
+      "dateColDataType": "date",
+      "dateTimeColDataType": "ts",
+      "interval": "$discovery_interval"
+    }
+  ],
+  "timeFrom": null,
+  "timeShift": null,
+  "tooltip": {
+    "msResolution": false,
+    "shared": true,
+    "sort": 0,
+    "value_type": "cumulative"
+  },
+  "type": "graph",
+  "xaxis": {
+    "show": true
+  },
+  "y-axis": true,
+  "yaxes": [
+    {
+      "format": "percent",
+      "label": "$",
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "show": true
+    },
+    {
+      "logBase": 1,
+      "show": true,
+      "max": null,
+      "format": "short",
+      "min": null,
+      "label": null
+    }
+  ]
+}
+{%- endmacro %}
+
+
+
+

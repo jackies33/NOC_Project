@@ -43,7 +43,7 @@ class EXEC_JUNIPER():
 
     def exec(self,*args):
         try:
-            with ThreadPoolExecutor(max_workers=5) as executor:
+            with ThreadPoolExecutor(max_workers=30) as executor:
                   result = executor.map(self.juniper_rpc, self.devices_list, repeat(self.config_dict))
         except Exception as err:
             print(f'\n\n{datetime.datetime.now()}\n\n{err}')
