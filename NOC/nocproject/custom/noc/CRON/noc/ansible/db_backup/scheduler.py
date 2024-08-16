@@ -48,19 +48,19 @@ def run_playbook():
     cmd_mongo = "ansible-playbook /opt/ansible/db_backup/run_mongo.yml"
     cmd_pgsql = "ansible-playbook /opt/ansible/db_backup/run_pgsql.yml"
     cmd_pgsql_netbox = "ansible-playbook /opt/ansible/db_backup/run_pgsql_netbox.yml"
-    cmd_clickhouse = "ansible-playbook /opt/ansible/db_backup/run_clickhouse.yml"
+    #cmd_clickhouse = "ansible-playbook /opt/ansible/db_backup/run_clickhouse.yml"
     logging.basicConfig(filename='/var/log/ansible/db_backup/output.log', level=logging.DEBUG)
     tz = timezone('Europe/Moscow')
     timenow = datetime.datetime.now(tz).replace(microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
     result_mongo = subprocess.run(cmd_mongo, shell=True, capture_output=True, text=True)
     result_pgsql = subprocess.run(cmd_pgsql, shell=True, capture_output=True, text=True)
     result_pgsql_netbox =subprocess.run(cmd_pgsql_netbox, shell=True, capture_output=True, text=True)
-    result_clickhouse = subprocess.run(cmd_clickhouse, shell=True, capture_output=True, text=True)
+    #result_clickhouse = subprocess.run(cmd_clickhouse, shell=True, capture_output=True, text=True)
     time.sleep(10)
     logging.info(f"\n\n\n{timenow} - 'Ansible Output MONGO': {result_mongo.stdout}\n\n\n")
     logging.info(f"\n\n\n{timenow} - 'Ansible Output POSTGRESQL': {result_pgsql.stdout}\n\n\n")
     logging.info(f"\n\n\n{timenow} - 'Ansible Output POSTGRESQL_NETBOX': {result_pgsql_netbox.stdout}\n\n\n")
-    logging.info(f"\n\n\n{timenow} - 'Ansible Output CLLICKHOUSE': {result_clickhouse.stdout}\n\n\n")
+    #logging.info(f"\n\n\n{timenow} - 'Ansible Output CLLICKHOUSE': {result_clickhouse.stdout}\n\n\n")
 
 run_time = datetime.time(hour=23, minute=55, second=0)
 

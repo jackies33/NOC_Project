@@ -28,8 +28,6 @@ class NBRemoteSystem(BaseRemoteSystem):
 
 
 
-
-
 @NBRemoteSystem.extractor
 class NBAuthProfile(BaseExtractor):
     """
@@ -268,10 +266,12 @@ class NBManagedObjectExtractor(BaseExtractor):
                 try:
                         if device == None:
                             continue
+                        host_name = str(device.name)
+                        if "wap" in host_name:
+                            continue
                         self.seen_ip.add(device.primary_ip)
                         netbox_interfaces[device.id] = str(device.primary_ip)
                         host_id = device.id
-                        host_name = device.name
                         host_status = str(device.status)
                         if host_status == 'Active':
                             host_status = 'Managed'
